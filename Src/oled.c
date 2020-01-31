@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stm32g4xx_hal_rtc.h>
+#include <rtc.h>
+#include "bluetooth.h"
 
 struct menuitem mainmenu[] = {
 		{"Prehraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
@@ -73,6 +76,8 @@ void oled_menuOnclick(int menupos){
 	}else if(strcmp(dispmenuname, "bluetoothmenu") == 0){
 		switch(menupos){
 			case 0:
+				//bluetoothGetScannedDevices();
+				oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices), 0);
 			break;
 
 			case 1:
@@ -116,14 +121,6 @@ void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusi
 
 void oled_drawMenu(){
 
-	//Dopocita se pozice v dispmenu
-	if(encoderpos >= (signed int)(dispmenusize)-1){
-		encoderpos = (signed int)(dispmenusize)-1;
-	}else if(encoderpos < (signed int)0){
-		encoderpos = 0;
-	}
-
-
 	if(encoderclick){
 		oled_menuOnclick(encoderpos);
 		/*if(dispmenu[encoderpos].submenu != 0){
@@ -131,9 +128,18 @@ void oled_drawMenu(){
 		}*/
 	}
 
+	RTC_TimeTypeDef time;
+	RTC_DateTypeDef date;
+	HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+
+	//sprintf(oledHeader, "%d.%d %d %ld:%ld:%02d",date.Date, date.Month, date.Year, time.SecondFraction, time.SubSeconds, time.Seconds);
 	//oledHeader = "MIDIControll 0.1";
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
+
+	for(uint8_t i = 0; i <= 128; i++) ssd1306_DrawPixel(i, 13, White);
+
 
 	//Vykresli se dispmenu
 	if(encoderpos != (signed int)(dispmenusize)-1){

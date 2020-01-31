@@ -1,5 +1,6 @@
 Src/bluetooth.o: ../Src/bluetooth.c D:/STM/MIDIControl/Inc/bluetooth.h \
- D:/STM/MIDIControl/Inc/devStatus.h \
+ D:/STM/MIDIControl/Inc/oled.h D:/STM/MIDIControl/Inc/tim.h \
+ D:/STM/MIDIControl/Inc/main.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
  D:/STM/MIDIControl/Inc/stm32g4xx_hal_conf.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h \
@@ -35,11 +36,12 @@ Src/bluetooth.o: ../Src/bluetooth.c D:/STM/MIDIControl/Inc/bluetooth.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pcd_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h \
+ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc.h \
+ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h \
- D:/STM/MIDIControl/Inc/main.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_ucpd.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_bus.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_cortex.h \
@@ -51,14 +53,18 @@ Src/bluetooth.o: ../Src/bluetooth.c D:/STM/MIDIControl/Inc/bluetooth.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dma.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dmamux.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_exti.h \
- D:/STM/MIDIControl/Inc/usart.h D:/STM/MIDIControl/Inc/main.h \
- D:/STM/MIDIControl/Inc/oled.h D:/STM/MIDIControl/Inc/tim.h \
  D:/STM/MIDIControl/Inc/encoder.h D:/STM/MIDIControl/Inc/ssd1306.h \
- D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h
+ D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h \
+ D:/STM/MIDIControl/Inc/devStatus.h D:/STM/MIDIControl/Inc/main.h \
+ D:/STM/MIDIControl/Inc/usart.h
 
 D:/STM/MIDIControl/Inc/bluetooth.h:
 
-D:/STM/MIDIControl/Inc/devStatus.h:
+D:/STM/MIDIControl/Inc/oled.h:
+
+D:/STM/MIDIControl/Inc/tim.h:
+
+D:/STM/MIDIControl/Inc/main.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h:
 
@@ -130,6 +136,10 @@ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h:
 
+D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc.h:
+
+D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc_ex.h:
+
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h:
@@ -137,8 +147,6 @@ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h:
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h:
-
-D:/STM/MIDIControl/Inc/main.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_ucpd.h:
 
@@ -162,14 +170,6 @@ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dmamux.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_exti.h:
 
-D:/STM/MIDIControl/Inc/usart.h:
-
-D:/STM/MIDIControl/Inc/main.h:
-
-D:/STM/MIDIControl/Inc/oled.h:
-
-D:/STM/MIDIControl/Inc/tim.h:
-
 D:/STM/MIDIControl/Inc/encoder.h:
 
 D:/STM/MIDIControl/Inc/ssd1306.h:
@@ -177,3 +177,9 @@ D:/STM/MIDIControl/Inc/ssd1306.h:
 D:/STM/MIDIControl/Inc/ssd1306_fonts.h:
 
 D:/STM/MIDIControl/Inc/menus.h:
+
+D:/STM/MIDIControl/Inc/devStatus.h:
+
+D:/STM/MIDIControl/Inc/main.h:
+
+D:/STM/MIDIControl/Inc/usart.h:

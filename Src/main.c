@@ -24,6 +24,7 @@
 #include "crc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "tim.h"
 #include "ucpd.h"
 #include "usart.h"
@@ -114,14 +115,16 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_RTC_Init(&hrtc);
 
   ws2812_init();
 
   setStatusAll(0, DEV_LOAD);
 
   oled_begin();
-
 
   if(bluetoothInit()){
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
@@ -161,10 +164,12 @@ void SystemClock_Config(void)
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI
+                              |RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV6;
@@ -191,15 +196,18 @@ void SystemClock_Config(void)
   }
   /** Initializes the peripherals clocks 
   */
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
+                              |RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
+                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_USB
+                              |RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_HSI;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_SYSCLK;
   PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_SYSCLK;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -245,6 +253,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			encoderpos++;
 		}else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
 			encoderpos--;
+		}
+
+		//Dopocita se pozice v dispmenu
+		if(encoderpos >= (signed int)(dispmenusize)-1){
+			encoderpos = (signed int)(dispmenusize)-1;
+		}else if(encoderpos < (signed int)0){
+			encoderpos = 0;
 		}
 
 		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) && GPIO_Pin_Flag == GPIO_PIN_1){
@@ -299,6 +314,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}else if(huart->Instance == USART2){
 		setStatus(DEV_BLUETOOTH, DEV_DATA);
 
+		//Prichazi data pro BT Receive Until
+		if(btRxStatus == 2){
+			//Zapise se prichozi byte
+			btRxBuff[btRxIndex++] = btRxByte;
+			//Znovu se zapne DMA
+			HAL_UART_Receive_DMA(&huart2, (uint8_t*)&btRxByte, 1);
+		}
 
 	}else if(huart->Instance == USART3){
 		//setStatus(DEV_MIDI, DEV_DATA);

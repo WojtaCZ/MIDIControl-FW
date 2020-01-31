@@ -14,6 +14,7 @@ C_SRCS += \
 ../Src/main.c \
 ../Src/msgDecoder.c \
 ../Src/oled.c \
+../Src/rtc.c \
 ../Src/ssd1306.c \
 ../Src/ssd1306_fonts.c \
 ../Src/stm32g4xx_hal_msp.c \
@@ -41,6 +42,7 @@ OBJS += \
 ./Src/main.o \
 ./Src/msgDecoder.o \
 ./Src/oled.o \
+./Src/rtc.o \
 ./Src/ssd1306.o \
 ./Src/ssd1306_fonts.o \
 ./Src/stm32g4xx_hal_msp.o \
@@ -68,6 +70,7 @@ C_DEPS += \
 ./Src/main.d \
 ./Src/msgDecoder.d \
 ./Src/oled.d \
+./Src/rtc.d \
 ./Src/ssd1306.d \
 ./Src/ssd1306_fonts.d \
 ./Src/stm32g4xx_hal_msp.d \

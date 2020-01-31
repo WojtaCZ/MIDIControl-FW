@@ -35,6 +35,8 @@ Src/stm32g4xx_hal_msp.o: ../Src/stm32g4xx_hal_msp.c \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pcd_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h \
+ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc.h \
+ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h \
@@ -122,6 +124,10 @@ D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pcd_ex.h:
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h:
+
+D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc.h:
+
+D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rtc_ex.h:
 
 D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h:
 
