@@ -125,6 +125,9 @@ uint8_t bluetoothGetScannedDevices(){
 
 		if(strstr((char *)devices[i+1], ",,") - (char *)devices[i+1] < 16 && strstr((char *)devices[i+1], ",,")){
 			sscanf((char *)devices[i+1], "%*[%]%[^,],%[0-9],,%[^,],%[^%]", name, macType, uuid, rssi);
+			unsigned int a,b,c,d,e,f;
+		    sscanf(name, "%02X%02X%02X%02X%02X%02X", &a, &b, &c, &d, &e, &f);
+		    sprintf(name, "%02X-%02X-%02X-%02X-%02X-%02X", a, b, c, d, e, f);
 		}else if(strstr((char *)devices[i+1], ",,") - (char *)devices[i+1] >= 16){
 			sscanf((char *)devices[i+1], "%*[%]%[^,],%[0-9],%[^,],,%[^%]", mac, macType, name, rssi);
 		}else sscanf((char *)devices[i+1], "%*[%]%[^,],%[0-9],%[^,],%[^,],%[^%]", mac, macType, name, uuid, rssi);

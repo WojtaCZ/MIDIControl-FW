@@ -116,6 +116,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_RTC_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_RTC_Init(&hrtc);
@@ -275,6 +276,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_NVIC_ClearPendingIRQ(EXTI0_IRQn);
 		HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 		HAL_NVIC_ClearPendingIRQ(EXTI1_IRQn);
+
+	}
+
+	if(htim->Instance == TIM4){
+		if(scrollPauseDone){
+			if(scrollIndex <= scrollMax){
+				scrollIndex++;
+			}else{
+				scrollPauseDone = 0;
+			}
+		}else scrollPause++;
+
+		if(scrollPause == OLED_MENU_SCROLL_PAUSE){
+			if(scrollIndex > 0){
+				scrollPauseDone = 0;
+			}else scrollPauseDone = 1;
+
+			scrollPause = 0;
+			scrollIndex = 0;
+		}
+
+
 
 	}
 

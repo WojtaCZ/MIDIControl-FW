@@ -107,7 +107,12 @@ void oled_begin(){
 	//Zapne se obnova OLED
 	oled_setDisplayedMenu("mainmenu", &mainmenu, sizeof(mainmenu), 0);
 	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim4);
 	oledHeader = (char*)malloc(50);
+	encoderpos = 0;
+	encoderposOld = -1;
+	scrollPause = 0;
+	scrollPauseDone = 0;
 }
 
 void oled_refresh(){
@@ -121,6 +126,7 @@ void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusi
 	memcpy(dispmenuname, menuname, strlen(menuname)+1);
 	memcpy(&dispmenu, menu, menusize);
 	dispmenusubmenu = issubmenu;
+	encoderposOld = -1;
 }
 
 void oled_drawMenu(){
@@ -138,12 +144,22 @@ void oled_drawMenu(){
 	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
 	//sprintf(oledHeader, "%d.%d %d %ld:%ld:%02d",date.Date, date.Month, date.Year, time.SecondFraction, time.SubSeconds, time.Seconds);
+	sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
 	//oledHeader = "MIDIControll 0.1";
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
 
 	for(uint8_t i = 0; i <= 128; i++) ssd1306_DrawPixel(i, 13, White);
 
+
+	//Zapne se scrollovani
+	if(strlen(dispmenu[encoderpos].name) > 9 && encoderpos != encoderposOld){
+		scrollIndex = 0;
+		scrollMax = strlen(dispmenu[encoderpos].name)-10;
+		encoderposOld = encoderpos;
+		scrollPause = 0;
+		scrollPauseDone = 0;
+	}
 
 	//Vykresli se dispmenu
 	if(encoderpos != (signed int)(dispmenusize)-1){
@@ -158,11 +174,18 @@ void oled_drawMenu(){
 			ssd1306_SetCursor(OLED_MENU_LEFT_PADDING + OLED_MENU_TEXT_WIDTH,(i-encoderpos+1)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
 
 			if(strlen(dispmenu[i].name) > 9){
-				char * tmp = (char*)malloc(12);
-				memset(tmp, 0, 12);
-				memcpy(tmp, dispmenu[i].name, 8);
-				tmp[8] = '*';
-				ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+				if(dispmenu[i].selected){
+					char tmp[10];
+					memcpy(tmp, dispmenu[i].name+scrollIndex, 9);
+					memset(tmp+9, 0, strlen(dispmenu[i].name)-9);
+					ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+				}else{
+					char tmp[10];
+					memcpy(tmp, dispmenu[i].name, 9);
+					memset(tmp+9, 0, strlen(dispmenu[i].name)-9);
+					ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+				}
+
 			}else ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
 
 			ssd1306_SetCursor(OLED_MENU_LEFT_PADDING, (i-encoderpos+1)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
@@ -185,10 +208,18 @@ void oled_drawMenu(){
 				ssd1306_SetCursor(OLED_MENU_LEFT_PADDING + OLED_MENU_TEXT_WIDTH,(i-encoderpos+2)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
 
 				if(strlen(dispmenu[i].name) > 9){
-					char * tmp = (char*)malloc(12);
-					memset(tmp, 0, 12);
-					memcpy(tmp, dispmenu[i].name, 9);
-					ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+					if(dispmenu[i].selected){
+						char tmp[10];
+						memcpy(tmp, dispmenu[i].name+scrollIndex, 9);
+						memset(tmp+9, 0, strlen(dispmenu[i].name)-9);
+						ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+					}else{
+						char tmp[10];
+						memcpy(tmp, dispmenu[i].name, 9);
+						memset(tmp+9, 0, strlen(dispmenu[i].name)-9);
+						ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+				}
+
 				}else ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
 
 				ssd1306_SetCursor(OLED_MENU_LEFT_PADDING, (i-encoderpos+2)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);

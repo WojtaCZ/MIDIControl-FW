@@ -13,11 +13,15 @@
 #define OLED_MENU_TEXT_WIDTH 11
 #define OLED_MENU_TEXT_HEIGHT 18
 
+#define OLED_MENU_SCROLL_PAUSE 2
+
 //Inicializuje se menu o 50 prvcích
 struct menuitem dispmenu[50];
 int dispmenusize;
 int dispmenusubmenu;
 char* dispmenuname;
+
+int scrollIndex, scrollMax, scrollPauseDone, scrollPause;
 
 char *oledHeader;
 
