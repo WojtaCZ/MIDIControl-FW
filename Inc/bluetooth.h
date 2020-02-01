@@ -17,10 +17,11 @@ uint8_t *btTxBuff;
 uint8_t bluetoothInit();
 uint8_t bluetoothCMD_ACK(char *cmd, char *ack);
 uint8_t bluetoothCMD_Until(char *cmd, char *terminator, char *recvBuffer);
+uint8_t bluetoothCMD_Time(char *cmd, uint8_t s, char (*recvBuffer)[]);
 uint8_t bluetoothGetScannedDevices();
-uint32_t countOccurances(char * buff);
+uint32_t countOccurances(char * buff, char * what);
 uint32_t replacechar(char *str, char orig, char rep);
-int splitString(char * string, char * delim, char ** array);
+uint32_t splitString(char * string, char * delim, char ** array);
 
 struct menuitem btScanedDevices[20];
 

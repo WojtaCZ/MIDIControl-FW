@@ -77,7 +77,7 @@ void oled_menuOnclick(int menupos){
 		switch(menupos){
 			case 0:
 				//bluetoothGetScannedDevices();
-				oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices), 0);
+				oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[20]), 0);
 			break;
 
 			case 1:
@@ -89,6 +89,10 @@ void oled_menuOnclick(int menupos){
 
 			default:
 			break;
+		}
+	}else if(strcmp(dispmenuname, "btScanedDevices") == 0){
+		if(menupos == btScannedCount){
+				oled_setDisplayedMenu("bluetoothmenu",&bluetoothmenu, sizeof(bluetoothmenu), 0);
 		}
 	}
 
@@ -152,7 +156,14 @@ void oled_drawMenu(){
 			ssd1306_WriteChar(33-(dispmenu[i].selected), Icon_11x18, White);*/
 
 			ssd1306_SetCursor(OLED_MENU_LEFT_PADDING + OLED_MENU_TEXT_WIDTH,(i-encoderpos+1)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
-			ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
+
+			if(strlen(dispmenu[i].name) > 9){
+				char * tmp = (char*)malloc(12);
+				memset(tmp, 0, 12);
+				memcpy(tmp, dispmenu[i].name, 8);
+				tmp[8] = '*';
+				ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+			}else ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
 
 			ssd1306_SetCursor(OLED_MENU_LEFT_PADDING, (i-encoderpos+1)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
 
@@ -172,7 +183,13 @@ void oled_drawMenu(){
 				}else dispmenu[i].selected = 0;
 
 				ssd1306_SetCursor(OLED_MENU_LEFT_PADDING + OLED_MENU_TEXT_WIDTH,(i-encoderpos+2)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
-				ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
+
+				if(strlen(dispmenu[i].name) > 9){
+					char * tmp = (char*)malloc(12);
+					memset(tmp, 0, 12);
+					memcpy(tmp, dispmenu[i].name, 9);
+					ssd1306_WriteString(tmp, *dispmenu[i].font, White);
+				}else ssd1306_WriteString(dispmenu[i].name, *dispmenu[i].font, White);
 
 				ssd1306_SetCursor(OLED_MENU_LEFT_PADDING, (i-encoderpos+2)*OLED_MENU_TEXT_HEIGHT + OLED_MENU_TOP_PADDING);
 
