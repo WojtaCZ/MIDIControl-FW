@@ -15,13 +15,23 @@
 
 #define OLED_MENU_SCROLL_PAUSE 2
 
+#define OLED_MENU	2
+#define OLED_SPLASH	3
+
+extern struct menuitem mainmenu[];
+
+
+
 //Inicializuje se menu o 50 prvcích
 struct menuitem dispmenu[50];
 int dispmenusize;
 int dispmenusubmenu;
 char* dispmenuname;
 
-int scrollIndex, scrollMax, scrollPauseDone, scrollPause;
+void (*splashFunction)(char*);
+char * splashTxt;
+
+int scrollIndex, scrollMax, scrollPauseDone, scrollPause, oledType, loadingStat;
 
 char *oledHeader;
 
@@ -30,5 +40,8 @@ void oled_refresh();
 void oled_drawMenu();
 void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusize, int issubmenu);
 void oled_menuOnclick(int menupos);
+void oled_StartSplash();
+void oled_LoadingSplash(char * msg);
+void oled_setDisplayedSplash(void (*funct)(), char * txt);
 
 #endif

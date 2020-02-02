@@ -63,7 +63,8 @@ Src/main.o: ../Src/main.c D:/STM/MIDIControl/Inc/main.h \
  D:/STM/MIDIControl/Inc/oled.h D:/STM/MIDIControl/Inc/tim.h \
  D:/STM/MIDIControl/Inc/encoder.h D:/STM/MIDIControl/Inc/ssd1306.h \
  D:/STM/MIDIControl/Inc/menus.h D:/STM/MIDIControl/Inc/bluetooth.h \
- D:/STM/MIDIControl/Inc/oled.h
+ D:/STM/MIDIControl/Inc/oled.h D:/STM/MIDIControl/Inc/midiControl.h \
+ D:/STM/MIDIControl/Inc/msgDecoder.h
 
 D:/STM/MIDIControl/Inc/main.h:
 
@@ -218,3 +219,7 @@ D:/STM/MIDIControl/Inc/menus.h:
 D:/STM/MIDIControl/Inc/bluetooth.h:
 
 D:/STM/MIDIControl/Inc/oled.h:
+
+D:/STM/MIDIControl/Inc/midiControl.h:
+
+D:/STM/MIDIControl/Inc/msgDecoder.h:

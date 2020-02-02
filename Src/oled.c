@@ -5,10 +5,12 @@
 #include <stm32g4xx_hal_rtc.h>
 #include <rtc.h>
 #include "bluetooth.h"
+#include "midiControl.h"
 
 struct menuitem mainmenu[] = {
 		{"Prehraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Nahraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
+		{"Varhany", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Ovladace", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Nastaveni", 0, &Font_11x18, 0, 0, 0, 0, 0/*, &settingsmenu, "settingsmenu"*/}
 };
@@ -26,6 +28,13 @@ struct menuitem bluetoothmenu[] = {
 		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
 };
 
+struct menuitem organmenu[] = {
+		{"Zapnout", 0, &Font_11x18, 0, 0, 0, 2, &mainmenu[2].name/*, 0, 0*/},
+		{"Vypnout", 0, &Font_11x18, 0, 0, 0, 2, &mainmenu[2].name/*, 0, 0*/},
+		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
+};
+
+
 
 
 void oled_menuOnclick(int menupos){
@@ -37,16 +46,21 @@ void oled_menuOnclick(int menupos){
 
 		switch(menupos){
 			case 0:
-
+				oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
 			break;
 
 			case 1:
 			break;
 
 			case 2:
+				oled_setDisplayedMenu("organmenu",&organmenu, sizeof(organmenu), 1);
 			break;
 
 			case 3:
+
+			break;
+
+			case 4:
 				oled_setDisplayedMenu("settingsmenu",&settingsmenu, sizeof(settingsmenu), 1);
 			break;
 
@@ -94,6 +108,23 @@ void oled_menuOnclick(int menupos){
 		if(menupos == btScannedCount){
 				oled_setDisplayedMenu("bluetoothmenu",&bluetoothmenu, sizeof(bluetoothmenu), 0);
 		}
+	}else if(strcmp(dispmenuname, "organmenu") == 0){
+		switch(menupos){
+					case 0:
+						midiControl_currentOn();
+					break;
+
+					case 1:
+						midiControl_currentOff();
+					break;
+
+					case 2:
+						oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
+					break;
+
+					default:
+					break;
+				}
 	}
 
 	encoderclick = 0;
@@ -106,6 +137,7 @@ void oled_begin(){
 	ssd1306_Init();
 	//Zapne se obnova OLED
 	oled_setDisplayedMenu("mainmenu", &mainmenu, sizeof(mainmenu), 0);
+	//oledType = OLED_SPLASH;
 	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_TIM_Base_Start_IT(&htim4);
 	oledHeader = (char*)malloc(50);
@@ -117,16 +149,34 @@ void oled_begin(){
 
 void oled_refresh(){
 	ssd1306_Fill(0);
-	oled_drawMenu();
+	if(oledType == OLED_MENU){
+		oled_drawMenu();
+	}else if(oledType == OLED_SPLASH){
+		(*splashFunction)(splashTxt);
+	}
+
 }
 
 void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusize, int issubmenu){
+	HAL_TIM_Base_Stop_IT(&htim2);
 	dispmenuname = malloc(strlen(menuname)+1);
 	dispmenusize = menusize/sizeof(struct menuitem);
 	memcpy(dispmenuname, menuname, strlen(menuname)+1);
 	memcpy(&dispmenu, menu, menusize);
 	dispmenusubmenu = issubmenu;
 	encoderposOld = -1;
+	oledType = OLED_MENU;
+	HAL_TIM_Base_Start_IT(&htim2);
+}
+
+void oled_setDisplayedSplash(void (*funct)(), char * txt){
+	HAL_TIM_Base_Stop_IT(&htim2);
+	loadingStat = 0;
+	splashFunction = funct;
+	splashTxt = txt;
+	oledType = OLED_SPLASH;
+	HAL_TIM_Base_Start_IT(&htim2);
+
 }
 
 void oled_drawMenu(){
@@ -144,8 +194,10 @@ void oled_drawMenu(){
 	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
 	//sprintf(oledHeader, "%d.%d %d %ld:%ld:%02d",date.Date, date.Month, date.Year, time.SecondFraction, time.SubSeconds, time.Seconds);
-	sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
+	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
+	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
+	sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
 
@@ -254,6 +306,35 @@ void oled_drawMenu(){
 
 
 	ssd1306_UpdateScreen(0);
+
+}
+
+void oled_StartSplash(){
+	oledType = OLED_SPLASH;
+	ssd1306_SetCursor(3, 10);
+	ssd1306_WriteString("MIDIControl", Font_11x18, White);
+
+	ssd1306_SetCursor(42,30);
+	ssd1306_WriteString("BASE", Font_11x18, White);
+
+	char * version = "Verze 1.1";
+	ssd1306_SetCursor((128-(strlen(version)-1)*7)/2,50);
+	ssd1306_WriteString(version, Font_7x10, White);
+
+}
+
+void oled_LoadingSplash(char * msg){
+	oledType = OLED_SPLASH;
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 15);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	ssd1306_SetCursor(42,35);
+	ssd1306_WriteChar(33 - (loadingStat & 0x01), Icon_11x18, White);
+	ssd1306_SetCursor(64,35);
+	ssd1306_WriteChar(33 - ((loadingStat>>1) & 0x01), Icon_11x18, White);
+	ssd1306_SetCursor(86,35);
+	ssd1306_WriteChar(33 - ((loadingStat>>2) & 0x01), Icon_11x18, White);
+
 
 }
 

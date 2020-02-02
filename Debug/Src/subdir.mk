@@ -12,6 +12,7 @@ C_SRCS += \
 ../Src/gpio.c \
 ../Src/i2c.c \
 ../Src/main.c \
+../Src/midiControl.c \
 ../Src/msgDecoder.c \
 ../Src/oled.c \
 ../Src/rtc.c \
@@ -40,6 +41,7 @@ OBJS += \
 ./Src/gpio.o \
 ./Src/i2c.o \
 ./Src/main.o \
+./Src/midiControl.o \
 ./Src/msgDecoder.o \
 ./Src/oled.o \
 ./Src/rtc.o \
@@ -68,6 +70,7 @@ C_DEPS += \
 ./Src/gpio.d \
 ./Src/i2c.d \
 ./Src/main.d \
+./Src/midiControl.d \
 ./Src/msgDecoder.d \
 ./Src/oled.d \
 ./Src/rtc.d \

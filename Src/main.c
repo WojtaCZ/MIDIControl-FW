@@ -38,6 +38,8 @@
 #include "devStatus.h"
 #include "oled.h"
 #include "bluetooth.h"
+#include "midiControl.h"
+#include "msgDecoder.h"
 
 uint16_t GPIO_Pin_Flag;
 /* USER CODE END Includes */
@@ -125,7 +127,17 @@ int main(void)
 
   setStatusAll(0, DEV_LOAD);
 
+ // oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
+
+  //oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
+
   oled_begin();
+
+
+
+
+  //oled_setDisplayedSplash(oled_StartSplash);
+  //oled_StartSplash();
 
   if(bluetoothInit()){
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
@@ -221,10 +233,10 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 
-	GPIO_Pin_Flag = GPIO_Pin;
+
 
 	if((GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1) && HAL_TIM_Base_GetState(&htim1) != HAL_TIM_STATE_BUSY){
-
+			GPIO_Pin_Flag = GPIO_Pin;
 			HAL_TIM_Base_Start_IT(&htim1);
 			HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
 			HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
@@ -233,6 +245,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 			HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 			HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+	}
+
+	if(GPIO_Pin == GPIO_PIN_5 || GPIO_Pin == GPIO_PIN_6 || GPIO_Pin == GPIO_PIN_7){
+
+
 
 	}
 
@@ -265,10 +283,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) && GPIO_Pin_Flag == GPIO_PIN_1){
 			setStatus(FRONT3, DEV_DATA);
-
-
-			setStatus(DEV_CURRENT, DEV_DATA);
-			HAL_GPIO_TogglePin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
+			//HAL_GPIO_TogglePin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
 			encoderclick = 1;
 		}
 
@@ -280,6 +295,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 
 	if(htim->Instance == TIM4){
+		//Kontroluje statusy periferii
+		midiControl_checkDisplay();
+
+
+
+
+		//Tady se dela scrollovani
 		if(scrollPauseDone){
 			if(scrollIndex <= scrollMax){
 				scrollIndex++;
@@ -296,6 +318,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			scrollPause = 0;
 			scrollIndex = 0;
 		}
+
+		if(loadingStat < 3){
+			loadingStat++;
+		}else loadingStat = 0;
 
 
 
@@ -318,13 +344,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void USB_received_handle(char * buff, uint32_t len){
 
-	//setStatus(DEV_USB, DEV_DATA);
+	setStatus(DEV_USB, DEV_DATA);
 
-	/*if(len > 4 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
-		setStatus(FRONT1, DATA);
+	if(len > 4 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
+		setStatus(FRONT1, DEV_DATA);
+		memcpy(&decoderBuffer, buff+4, len);
+		decodeMessage(decoderBuffer, len-4);
+
 	}else{
 		HAL_UART_Transmit(&huart3, (uint8_t*)buff, len, HAL_MAX_DELAY);
-	}*/
+	}
 
 	//HAL_UART_Transmit(&huart2, (uint8_t*)buff, len, HAL_MAX_DELAY);
 }
@@ -352,20 +381,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-	/*if(huart->Instance == USART1){
+	if(huart->Instance == USART1){
+		setStatus(DEV_DISP, DEV_DATA);
 		//Ukazatel
 	}else if(huart->Instance == USART2){
 
 		//setStatus(DEV_BLUETOOTH, DEV_DATA);
 		//Spusti se prijem
-		btRxComplete = 0;
-		btRxBuffIndex = 0;
-		HAL_UART_Receive_IT(&huart2, &btRxByte, 1);
+		//btRxComplete = 0;
+		//btRxBuffIndex = 0;
+		//HAL_UART_Receive_IT(&huart2, &btRxByte, 1);
 
 
 	}else if(huart->Instance == USART3){
 		//MIDI
-	}*/
+	}
 }
 
 

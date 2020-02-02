@@ -45,6 +45,7 @@
 "Src/gpio.o"
 "Src/i2c.o"
 "Src/main.o"
+"Src/midiControl.o"
 "Src/msgDecoder.o"
 "Src/oled.o"
 "Src/rtc.o"
