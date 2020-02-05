@@ -99,6 +99,9 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+  //Restartuje attiny na desce
+  midiControl_midiIO_init();
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -143,6 +146,16 @@ int main(void)
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
   }else{
 	  setStatus(DEV_BLUETOOTH, DEV_ERR);
+  }
+
+  midiStatus = midiControl_midiIO_getState();
+
+  if(midiStatus != MIDI_SEARCHING){
+  	  setStatus(DEV_MIDIA, DEV_OK);
+  	  setStatus(DEV_MIDIB, DEV_OK);
+  }else{
+	  setStatus(DEV_MIDIA, DEV_ERR);
+	  setStatus(DEV_MIDIB, DEV_ERR);
   }
 
 

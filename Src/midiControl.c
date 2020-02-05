@@ -29,6 +29,18 @@ void midiControl_currentOff(){
 }
 
 
-void midiControl_getMIDIState(){
+uint8_t midiControl_midiIO_getState(){
+	if(HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin)){
+		return MIDI_SEARCHING;
+	}else if((!HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin)) & (!HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin))){
+		return MIDI_A;
+	}else if((!HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin)) & (HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin))){
+		return MIDI_B;
+	}
+
+	return MIDI_SEARCHING;
+}
+
+void midiControl_midiIO_init(){
 
 }

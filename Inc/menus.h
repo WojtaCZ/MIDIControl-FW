@@ -2,7 +2,7 @@
 #define menus_h
 
 struct menuitem{
-	char* name;
+	char *name;
 	int selected;
 	FontDef* font;
 	int hasSpecialSelector;

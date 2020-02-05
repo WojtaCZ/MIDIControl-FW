@@ -57,6 +57,8 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 3:
+				bluetoothGetBondedDevices();
+				oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
 
 			break;
 
@@ -91,7 +93,7 @@ void oled_menuOnclick(int menupos){
 		switch(menupos){
 			case 0:
 				//bluetoothGetScannedDevices();
-				oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[20]), 0);
+				oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
 			break;
 
 			case 1:
@@ -197,7 +199,7 @@ void oled_drawMenu(){
 	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
-	sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
+	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
 
