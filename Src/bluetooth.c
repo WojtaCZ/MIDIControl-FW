@@ -40,8 +40,6 @@ uint8_t bluetoothInit(){
 	if(!bluetoothCMD_ACK("SGA,0\r", BT_AOK)) return 0;
 	if(!bluetoothCMD_ACK("SGC,0\r", BT_AOK)) return 0;
 
-	//bluetoothGetScannedDevices();
-
 	if(!bluetoothCMD_ACK("SA,4\r", BT_AOK)) return 0;
 
 
@@ -152,7 +150,6 @@ uint8_t bluetoothGetScannedDevices(){
 
 		btScanedDevices[i].font = &Font_11x18;
 		btScanedDevices[i].name = btScanned[i].name;
-		//sprintf(btScanedDevices[i].name, "%s", btScanned[i].name);
 		btScanedDevices[i].selected = 0;
 		btScanedDevices[i].hasSpecialSelector = 0;
 		btScanedDevices[i].specharNotSelected = 0;

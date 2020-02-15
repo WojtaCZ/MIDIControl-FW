@@ -99,9 +99,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-  //Restartuje attiny na desce
-  midiControl_midiIO_init();
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -124,13 +121,16 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
+  //Restartuje attiny na desce
+  midiControl_midiIO_init();
+
   HAL_RTC_Init(&hrtc);
 
   ws2812_init();
 
   setStatusAll(0, DEV_LOAD);
 
- // oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
+  //oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
 
   //oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
 
@@ -159,6 +159,7 @@ int main(void)
   }
 
 
+  oledType = OLED_MENU;
 
 
 
@@ -169,8 +170,13 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+if(scanDev){
+	  bluetoothGetScannedDevices();
+		  oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
+		  scanDev = 0;
 
-    /* USER CODE BEGIN 3 */
+}
+	    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -297,6 +303,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) && GPIO_Pin_Flag == GPIO_PIN_1){
 			setStatus(FRONT3, DEV_DATA);
 			//HAL_GPIO_TogglePin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
+			//oledType = OLED_MENU;
 			encoderclick = 1;
 		}
 
@@ -332,9 +339,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			scrollIndex = 0;
 		}
 
-		if(loadingStat < 3){
-			loadingStat++;
-		}else loadingStat = 0;
+		if(loadingStat < 4){
+			loadingStat <<= 1;
+		}else loadingStat = 1;
 
 
 

@@ -11,7 +11,7 @@ extern struct menuitem bluetoothmenu[];
 #define BT_RX_BUFF_SIZE 255
 #define BT_AOK "AOK\r\nCMD> "
 
-uint8_t btRxBuff[BT_RX_BUFF_SIZE], btRxIndex, btRxComplete, btRxByte, btRxStatus, btScannedCount, btBondedCount;
+uint8_t btRxBuff[BT_RX_BUFF_SIZE], btRxIndex, btRxComplete, btRxByte, btRxStatus, btScannedCount, btBondedCount, scanDev;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();
