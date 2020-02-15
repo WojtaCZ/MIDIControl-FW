@@ -46,6 +46,17 @@ uint8_t bluetoothInit(){
 	return 1;
 }
 
+uint8_t bluetooth_refreshSelfInfo(){
+	char buff[30];
+	memset(buff, 0, 30);
+
+	if(!bluetoothCMD_Until("GP\r", "\n", buff)) return 0;
+
+	sprintf(oledHeader, "%s", buff);
+
+	return 1;
+}
+
 
 uint8_t bluetoothCMD_ACK(char *cmd, char *ack){
 		memset(btRxBuff, 0, sizeof(btRxBuff));
@@ -106,6 +117,31 @@ uint8_t bluetoothCMD_Time(char *cmd, uint8_t s, char (*recvBuffer)[]){
 	return 1;
 }
 
+
+uint8_t bluetoothConnectKnown(){
+	bluetoothGetScannedDevices();
+	bluetoothGetBondedDevices();
+
+	int8_t match = -1;
+
+	for(uint8_t b = 0; b < btBondedCount; b++){
+		for(uint8_t s = 0; s < btScannedCount; s++){
+			match = b;
+			for(uint8_t i = 0; i < 6; i++){
+				if(btScanned[s].mac[i] != btBonded[b].mac[i]){
+					match = -1;
+					break;
+				}
+			}
+		}
+	}
+
+	if(match != -1){
+		return 1;
+	}
+
+	return 0;
+}
 
 uint8_t bluetoothGetScannedDevices(){
 

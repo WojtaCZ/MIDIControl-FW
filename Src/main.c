@@ -148,6 +148,13 @@ int main(void)
 	  setStatus(DEV_BLUETOOTH, DEV_ERR);
   }
 
+  //Prohleda zarizeni v okoli a pripoji se ke znamemu ovladaci
+ /* if(bluetoothConnectKnown()){
+	  setStatus(FRONT1, DEV_OK);
+  }*/
+
+
+
   midiStatus = midiControl_midiIO_getState();
 
   if(midiStatus != MIDI_SEARCHING){
@@ -159,6 +166,12 @@ int main(void)
   }
 
 
+ /* if(!usbStatus){
+	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
+	  while(!usbStatus);
+  }*/
+
+  //Skoci do menu
   oledType = OLED_MENU;
 
 

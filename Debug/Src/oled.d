@@ -54,8 +54,9 @@ Src/oled.o: ../Src/oled.c D:/STM/MIDIControl/Inc/oled.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_exti.h \
  D:/STM/MIDIControl/Inc/encoder.h D:/STM/MIDIControl/Inc/ssd1306.h \
  D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h \
+ D:/STM/MIDIControl/Inc/bluetooth.h D:/STM/MIDIControl/Inc/oled.h \
  D:/STM/MIDIControl/Inc/rtc.h D:/STM/MIDIControl/Inc/bluetooth.h \
- D:/STM/MIDIControl/Inc/oled.h D:/STM/MIDIControl/Inc/midiControl.h
+ D:/STM/MIDIControl/Inc/midiControl.h
 
 D:/STM/MIDIControl/Inc/oled.h:
 
@@ -175,10 +176,12 @@ D:/STM/MIDIControl/Inc/ssd1306_fonts.h:
 
 D:/STM/MIDIControl/Inc/menus.h:
 
-D:/STM/MIDIControl/Inc/rtc.h:
-
 D:/STM/MIDIControl/Inc/bluetooth.h:
 
 D:/STM/MIDIControl/Inc/oled.h:
+
+D:/STM/MIDIControl/Inc/rtc.h:
+
+D:/STM/MIDIControl/Inc/bluetooth.h:
 
 D:/STM/MIDIControl/Inc/midiControl.h:

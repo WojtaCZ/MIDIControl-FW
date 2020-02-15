@@ -6,6 +6,7 @@
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 #include "menus.h"
+#include "bluetooth.h"
 
 #define OLED_MENU_TOP_PADDING 3
 #define OLED_MENU_LEFT_PADDING 2
@@ -28,8 +29,8 @@ int dispmenusize;
 int dispmenusubmenu;
 char* dispmenuname;
 
-void (*splashFunction)(char*);
-char * splashTxt;
+void (*splashFunction)(void*);
+void * splashParams;
 
 int scrollIndex, scrollMax, scrollPauseDone, scrollPause, oledType, loadingStat;
 
@@ -41,7 +42,9 @@ void oled_drawMenu();
 void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusize, int issubmenu);
 void oled_menuOnclick(int menupos);
 void oled_StartSplash();
+void oled_UsbWaitingSplash();
 void oled_LoadingSplash(char * msg);
-void oled_setDisplayedSplash(void (*funct)(), char * txt);
+void oled_BtDevInfoSplash(struct btDevice * dev);
+void oled_setDisplayedSplash(void (*funct)(), void * params);
 
 #endif
