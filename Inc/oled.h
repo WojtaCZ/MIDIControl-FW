@@ -32,7 +32,7 @@ char* dispmenuname;
 void (*splashFunction)(void*);
 void * splashParams;
 
-int scrollIndex, scrollMax, scrollPauseDone, scrollPause, oledType, loadingStat;
+int scrollIndex, scrollMax, scrollPauseDone, scrollPause, oledType, loadingStat, refreshHalt;
 
 char *oledHeader;
 
@@ -46,5 +46,7 @@ void oled_UsbWaitingSplash();
 void oled_LoadingSplash(char * msg);
 void oled_BtDevInfoSplash(struct btDevice * dev);
 void oled_setDisplayedSplash(void (*funct)(), void * params);
+void oled_refreshPause();
+void oled_refreshresume();
 
 #endif

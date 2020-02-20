@@ -42,6 +42,13 @@
 #include "msgDecoder.h"
 
 uint16_t GPIO_Pin_Flag;
+extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+uint8_t b;
+
+uint16_t midiFifoIndex;
+uint8_t midiFifo[500];
+
+int readBytes = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,10 +123,12 @@ int main(void)
   MX_TIM17_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
-  MX_TIM3_Init();
   MX_RTC_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+
+  //Inicializuje se system MIDIControl
+  midiControl_init();
 
   //Restartuje attiny na desce
   midiControl_midiIO_init();
@@ -153,18 +162,7 @@ int main(void)
 	  setStatus(FRONT1, DEV_OK);
   }*/
 
-
-
-  midiStatus = midiControl_midiIO_getState();
-
-  if(midiStatus != MIDI_SEARCHING){
-  	  setStatus(DEV_MIDIA, DEV_OK);
-  	  setStatus(DEV_MIDIB, DEV_OK);
-  }else{
-	  setStatus(DEV_MIDIA, DEV_ERR);
-	  setStatus(DEV_MIDIB, DEV_ERR);
-  }
-
+  midiControl_midiIO_getState();
 
  /* if(!usbStatus){
 	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
@@ -176,20 +174,46 @@ int main(void)
 
 
 
+
+
+  //HAL_UART_Transmit_IT(&huart2, "$$$", 3);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-if(scanDev){
-	  bluetoothGetScannedDevices();
-		  oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
-		  scanDev = 0;
 
-}
-	    /* USER CODE BEGIN 3 */
+	  //Pokud byl request na skenovani
+	  if(workerBtScanDev){
+		 bluetoothGetScannedDevices();
+		 oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
+		 workerBtScanDev = 0;
+	  }
+
+	  if(workerBtBondDev){
+		 bluetoothGetBondedDevices();
+		 oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
+		 workerBtBondDev = 0;
+	  }
+
+
+
+
+	/*  if(!alivePC){
+	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
+	  	  oled_refresh();
+	  	  while(!alivePC){
+	  		  HAL_Delay(100);
+	  	  }
+	  	  oledType = OLED_MENU;
+	  }
+*/
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -329,10 +353,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if(htim->Instance == TIM4){
 		//Kontroluje statusy periferii
-		midiControl_checkDisplay();
+		midiControl_display_getState();
+
+		midiControl_midiIO_getState();
 
 
-
+		midiControl_keepalive_process();
 
 		//Tady se dela scrollovani
 		if(scrollPauseDone){
@@ -356,8 +382,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			loadingStat <<= 1;
 		}else loadingStat = 1;
 
-
-
+		if(btFifoIndex > 0){
+			CDC_Transmit_FS(btFifo, btFifoIndex-1);
+		}
 	}
 
 	if(htim->Instance == TIM2){
@@ -366,12 +393,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		proccessPendingStatus();
 	}
 
-	if(htim->Instance == TIM3){
-			//setStatus(FRONT3, DEV_DATA);
-			//btRxComplete = 0;
-			//CDC_Transmit_FS(btRxBuff, sizeof(btRxBuff));
-
-	}
 
 }
 
@@ -379,37 +400,78 @@ void USB_received_handle(char * buff, uint32_t len){
 
 	setStatus(DEV_USB, DEV_DATA);
 
-	if(len > 4 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
+	if(len > 5 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
 		setStatus(FRONT1, DEV_DATA);
-		memcpy(&decoderBuffer, buff+4, len);
-		decodeMessage(decoderBuffer, len-4);
+
+		uint16_t msgLen = ((((unsigned char)buff[4] << 8)& 0xff00) | ((unsigned char)buff[5] & 0xff));
+
+		memcpy(&decoderBuffer, buff, msgLen+6);
+
+		//Pokud je pro toto zarizeni
+		if((buff[6] & 0x03) == ADDRESS_MAIN){
+			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
+		}else if((buff[6] & 0x04) >> 3){
+			//Pokud je broadcast
+			//Dekoduje a preposle na BT
+			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
+			if(btMessageMode){
+				//HAL_UART_Transmit_DMA(&huart2, decoderBuffer, msgLen+6);
+			}
+		}else{
+			//Jen preposle na BT
+			if(btMessageMode){
+				//HAL_UART_Transmit_DMA(&huart2, decoderBuffer, msgLen+6);
+			}
+		}
+
 
 	}else{
-		HAL_UART_Transmit(&huart3, (uint8_t*)buff, len, HAL_MAX_DELAY);
+		HAL_UART_Transmit_IT(&huart3, (uint8_t*)buff, len);
 	}
 
 	//HAL_UART_Transmit(&huart2, (uint8_t*)buff, len, HAL_MAX_DELAY);
 }
 
+void USB_transmit_handle(char * buff, uint32_t len){
+	setStatus(DEV_USB, DEV_DATA);
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
-	if(huart->Instance == USART1){
+	if(huart->Instance == USART3){
+		if(midiStatus == MIDI_A){
+			setStatus(DEV_MIDIA, DEV_DATA);
+		}else if(midiStatus == MIDI_B){
+			setStatus(DEV_MIDIB, DEV_DATA);
+		}
+
+
+		if(midiFifoIndex > 0){
+			CDC_Transmit_FS(midiFifo, midiFifoIndex);
+			midiFifoIndex = 0;
+		}
+
+		HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+
+	}else if(huart->Instance == USART1){
 		setStatus(DEV_DISP, DEV_DATA);
 		//Ukazatel
 	}else if(huart->Instance == USART2){
 		setStatus(DEV_BLUETOOTH, DEV_DATA);
 
+		btFifo[btFifoIndex++] = btFifoByte;
+
+		HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
 		//Prichazi data pro BT Receive Until
-		if(btRxStatus == 2){
+		/*if(btRxStatus == 2){
 			//Zapise se prichozi byte
 			btRxBuff[btRxIndex++] = btRxByte;
-			//Znovu se zapne DMA
-			HAL_UART_Receive_DMA(&huart2, (uint8_t*)&btRxByte, 1);
-		}
 
-	}else if(huart->Instance == USART3){
-		//setStatus(DEV_MIDI, DEV_DATA);
-		//MIDI
+
+			//Znovu se zapne DMA
+			//HAL_UART_Receive_IT(&huart2, (uint8_t*)&btRxByte, 1);
+		}
+*/
 	}
 }
 
@@ -418,8 +480,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 		setStatus(DEV_DISP, DEV_DATA);
 		//Ukazatel
 	}else if(huart->Instance == USART2){
-
-		//setStatus(DEV_BLUETOOTH, DEV_DATA);
+		setStatus(DEV_BLUETOOTH, DEV_DATA);
 		//Spusti se prijem
 		//btRxComplete = 0;
 		//btRxBuffIndex = 0;
@@ -427,7 +488,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
 
 	}else if(huart->Instance == USART3){
-		//MIDI
+		if(midiStatus == MIDI_A){
+			setStatus(DEV_MIDIB, DEV_DATA);
+		}else if(midiStatus == MIDI_B){
+			setStatus(DEV_MIDIA, DEV_DATA);
+		}
 	}
 }
 

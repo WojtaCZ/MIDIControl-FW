@@ -58,8 +58,7 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 3:
-				//bluetoothGetBondedDevices();
-				oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
+				workerBtBondDev = 1;
 
 			break;
 
@@ -94,7 +93,7 @@ void oled_menuOnclick(int menupos){
 		switch(menupos){
 			case 0:
 				oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
-				scanDev = 1;
+				workerBtScanDev = 1;
 			break;
 
 			case 1:
@@ -125,11 +124,11 @@ void oled_menuOnclick(int menupos){
 	}else if(strcmp(dispmenuname, "organmenu") == 0){
 		switch(menupos){
 					case 0:
-						midiControl_currentOn();
+						midiControl_current_On();
 					break;
 
 					case 1:
-						midiControl_currentOff();
+						midiControl_current_Off();
 					break;
 
 					case 2:
@@ -152,22 +151,25 @@ void oled_begin(){
 	//Zapne se obnova OLED
 	oled_setDisplayedMenu("mainmenu", &mainmenu, sizeof(mainmenu), 0);
 	oled_setDisplayedSplash(oled_StartSplash, "");
-	HAL_TIM_Base_Start_IT(&htim2);
-	HAL_TIM_Base_Start_IT(&htim4);
-	oledHeader = (char*)malloc(50);
+	refreshHalt = 0;
 	encoderpos = 0;
 	encoderposOld = -1;
 	scrollPause = 0;
 	scrollPauseDone = 0;
+	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim4);
+	oledHeader = (char*)malloc(50);
 }
 
 void oled_refresh(){
-	ssd1306_Fill(0);
-	if(oledType == OLED_MENU){
-		oled_drawMenu();
-	}else if(oledType == OLED_SPLASH){
-		(*splashFunction)(splashParams);
-		ssd1306_UpdateScreen(0);
+	if(!refreshHalt){
+		ssd1306_Fill(0);
+		if(oledType == OLED_MENU){
+			oled_drawMenu();
+		}else if(oledType == OLED_SPLASH){
+			(*splashFunction)(splashParams);
+			ssd1306_UpdateScreen(0);
+		}
 	}
 
 }
@@ -212,7 +214,7 @@ void oled_drawMenu(){
 	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
-	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
+	sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
 	//sprintf(oledHeader, "E: %d", loadingStat);
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
@@ -321,8 +323,18 @@ void oled_drawMenu(){
 	};
 
 
-	ssd1306_UpdateScreen(0);
+	if(!refreshHalt) ssd1306_UpdateScreen(0);
 
+}
+
+
+void oled_refreshPause(){
+	oled_refresh();
+	refreshHalt = 1;
+}
+
+void oled_refreshResume(){
+	refreshHalt = 0;
 }
 
 void oled_StartSplash(){

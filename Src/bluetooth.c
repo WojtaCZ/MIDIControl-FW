@@ -15,7 +15,12 @@ extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 uint8_t bluetoothInit(){
 
-	if(HAL_UART_Receive_DMA(&huart2, btRxBuff, 8) != HAL_OK) return 0;
+	btMessageMode = 0;
+	btFifoIndex = 0;
+
+	//Zecne se prijem
+	HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
+
 	HAL_GPIO_WritePin(BT_RST_GPIO_Port, BT_RST_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(BT_MODE_GPIO_Port, BT_MODE_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
@@ -23,16 +28,11 @@ uint8_t bluetoothInit(){
 
 	HAL_Delay(100);
 
-	while(HAL_DMA_GetState(&hdma_usart2_rx) == HAL_DMA_STATE_BUSY);
-	if(strcmp("%REBOOT%", (char *)btRxBuff) != 0) return 0;
-	HAL_UART_DMAStop(&huart2);
-
-
 	//Zapne se CMD
-	if(!bluetoothCMD_ACK("$$$", "CMD> ")) return 0;
+	if(!bluetoothCMD_ACK("$$$", "CMD>")) return 0;
 
 	//Zkontroluje se název
-	if(!bluetoothCMD_ACK("GN\r", "MIDIControl\r\nCMD> ")){
+	if(!bluetoothCMD_ACK("GN\r", "MIDIControl")){
 		if(!bluetoothCMD_ACK("SN,MIDIControl\r", BT_AOK)) return 0;
 	}
 
@@ -40,7 +40,20 @@ uint8_t bluetoothInit(){
 	if(!bluetoothCMD_ACK("SGA,0\r", BT_AOK)) return 0;
 	if(!bluetoothCMD_ACK("SGC,0\r", BT_AOK)) return 0;
 
+	//Apperance jako Media Player - Remote je 0180
+	if(!bluetoothCMD_ACK("SDA,0280\r", BT_AOK)) return 0;
+
+	//Vyrobce
+	if(!bluetoothCMD_ACK("SDN,Vojtech Vosahlo\r", BT_AOK)) return 0;
+
+	//Automaticky potvrdi pin
 	if(!bluetoothCMD_ACK("SA,4\r", BT_AOK)) return 0;
+
+	//Dev info a UART
+	if(!bluetoothCMD_ACK("SS,C0\r", BT_AOK)) return 0;
+
+	//Vypne CMD
+	//if(!bluetoothCMD_ACK("---\r", "END")) return 0;
 
 
 	return 1;
@@ -50,7 +63,7 @@ uint8_t bluetooth_refreshSelfInfo(){
 	char buff[30];
 	memset(buff, 0, 30);
 
-	if(!bluetoothCMD_Until("GP\r", "\n", buff)) return 0;
+	if(!bluetoothCMD_Until("GP\r", "\n", &buff)) return 0;
 
 	sprintf(oledHeader, "%s", buff);
 
@@ -58,61 +71,64 @@ uint8_t bluetooth_refreshSelfInfo(){
 }
 
 
+void bluetoothFifoFlush(){
+	memset(btFifo, 0, btFifoIndex);
+	btFifoIndex = 0;
+}
+
 uint8_t bluetoothCMD_ACK(char *cmd, char *ack){
-		memset(btRxBuff, 0, sizeof(btRxBuff));
 
+		bluetoothFifoFlush();
 
-		if(HAL_UART_Transmit_DMA(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
-		while(HAL_DMA_GetState(&hdma_usart2_tx) == HAL_DMA_STATE_BUSY);
-		while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX);
-		if(HAL_UART_Receive_DMA(&huart2, btRxBuff, strlen(ack)) != HAL_OK) return 0;
-		while(HAL_DMA_GetState(&hdma_usart2_rx) == HAL_DMA_STATE_BUSY);
-		while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX);
+		if(strlen(cmd) > 0){
+			if(HAL_UART_Transmit_IT(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
+		}
 
-		HAL_UART_DMAStop(&huart2);
-		if(strstr((char *)btRxBuff, ack) == 0) return 0;
+		uint32_t now = HAL_GetTick();
+		while(strstr((char *)btFifo, ack) == 0 && HAL_GetTick() - now < BT_TIMEOUT);
+
+		bluetoothFifoFlush();
+
+		if(HAL_GetTick() - now >= BT_TIMEOUT) return 0;
 
 		return 1;
 
 }
 
-uint8_t bluetoothCMD_Until(char *cmd, char *terminator, char *recvBuffer){
-	memset(btRxBuff, 0, sizeof(btRxBuff));
+uint8_t bluetoothCMD_Until(char *cmd, char *terminator, char (*recvBuffer)[]){
 
-	btRxStatus = 2;
-	btRxIndex = 0;
-	if(HAL_UART_Receive_DMA(&huart2, (uint8_t*)&btRxByte, 1) != HAL_OK) return 0;
-	if(HAL_UART_Transmit_DMA(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
+	bluetoothFifoFlush();
 
-	//Ceka nez prijde terminator
-	while(!strstr((char *)btRxBuff, terminator) && btRxIndex < BT_RX_BUFF_SIZE);
+	if(strlen(cmd) > 0){
+		if(HAL_UART_Transmit_IT(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
+	}
 
-	if(strstr((char *)btRxBuff, terminator) == 0) return 0;
+	uint32_t now = HAL_GetTick();
+	while(strstr((char *)btFifo, terminator) == 0 && HAL_GetTick() - now < BT_TIMEOUT);
 
-	memcpy(recvBuffer, (char *)btRxBuff, btRxIndex);
+	memcpy(recvBuffer, (char *)btFifo, btFifoIndex-1);
 
-	HAL_UART_DMAStop(&huart2);
+	bluetoothFifoFlush();
+
+	if(HAL_GetTick() - now >= BT_TIMEOUT) return 0;
 
 	return 1;
 }
 
 uint8_t bluetoothCMD_Time(char *cmd, uint8_t s, char (*recvBuffer)[]){
-	memset(btRxBuff, 0, sizeof(btRxBuff));
 
-	btRxStatus = 2;
-	btRxIndex = 0;
-	if(HAL_UART_Receive_DMA(&huart2, (uint8_t*)&btRxByte, 1) != HAL_OK) return 0;
-	if(HAL_UART_Transmit_DMA(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
+	bluetoothFifoFlush();
 
+	if(strlen(cmd) > 0){
+		if(HAL_UART_Transmit_IT(&huart2, (uint8_t*)cmd, strlen(cmd)) != HAL_OK) return 0;
+	}
 
-	long long int start = HAL_GetTick();
+	uint32_t now = HAL_GetTick();
+	while(HAL_GetTick() - now < (s*1000));
 
-	//Ceka dany cas
-	while(btRxIndex < BT_RX_BUFF_SIZE && HAL_GetTick() < (start+s*1000));
+	memcpy(recvBuffer, (char *)btFifo, btFifoIndex-1);
 
-	memcpy(recvBuffer, (char *)btRxBuff, btRxIndex-1);
-
-	HAL_UART_DMAStop(&huart2);
+	bluetoothFifoFlush();
 
 	return 1;
 }
@@ -152,6 +168,10 @@ uint8_t bluetoothGetScannedDevices(){
 
 	if(!bluetoothCMD_Time("F\r", 15, &buff)) return 0;
 
+	CDC_Transmit_FS((uint8_t*)"\n\n", 2);
+	CDC_Transmit_FS((uint8_t*)buff, 100);
+	CDC_Transmit_FS((uint8_t*)"\n\n", 2);
+
 	char *devices[20];
 	/*for(int i=0; i < 20; i++){
 		devices[i] = (char*)malloc(100);
@@ -163,6 +183,7 @@ uint8_t bluetoothGetScannedDevices(){
 	splitString(buff, "\n", devices);
 
 	//sprintf(oledHeader, "Count: %d", btScannedCount);
+
 
 	uint8_t i;
 
@@ -206,7 +227,7 @@ uint8_t bluetoothGetScannedDevices(){
 	btScanedDevices[btScannedCount].submenuLevel = 3;
 	btScanedDevices[btScannedCount].parentItem = 0;
 
-	bluetoothCMD_Until("X\r", "CMD> ", buff);
+	bluetoothCMD_Until("X\r", "CMD> ", &buff);
 
 
 	return 1;
@@ -217,11 +238,12 @@ uint8_t bluetoothGetBondedDevices(){
 
 	char buff[300];
 	memset(buff, 0, 300);
+	//CDC_Transmit_FS("A", 1);
 
-	if(!bluetoothCMD_Until("LB\r", "END", &buff)) return 0;
+	bluetoothCMD_Until("LB\r", "END", &buff);
 
-	CDC_Transmit_FS(buff, strlen(buff));
-	CDC_Transmit_FS("\n", 1);
+	/*CDC_Transmit_FS(buff, btRxIndex);
+	CDC_Transmit_FS("\n", 1);*/
 
 	char *devices[20];
 	/*for(int i=0; i < 20; i++){
@@ -242,8 +264,8 @@ uint8_t bluetoothGetBondedDevices(){
 		sscanf((char *)devices[i], "%*d,%02X%02X%02X%02X%02X%02X,%d", &btBonded[i].mac[0], &btBonded[i].mac[1], &btBonded[i].mac[2], &btBonded[i].mac[3], &btBonded[i].mac[4], &btBonded[i].mac[5], &btBonded[i].mactype);
 		sprintf(btBonded[i].name, "%02X-%02X-%02X-%02X-%02X-%02X", btBonded[i].mac[0], btBonded[i].mac[1], btBonded[i].mac[2], btBonded[i].mac[3], btBonded[i].mac[4], btBonded[i].mac[5]);
 
-		CDC_Transmit_FS(btBonded[i].name, strlen(btBonded[i].name));
-		CDC_Transmit_FS("\n", 1);
+		/*CDC_Transmit_FS(btBonded[i].name, strlen(btBonded[i].name));
+		CDC_Transmit_FS("\n", 1);*/
 
 		btBondedDevicesMenu[i].font = &Font_11x18;
 		btBondedDevicesMenu[i].name = btBonded[i].name;

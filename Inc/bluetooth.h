@@ -8,15 +8,18 @@
 
 extern struct menuitem bluetoothmenu[];
 
-#define BT_RX_BUFF_SIZE 255
-#define BT_AOK "AOK\r\nCMD> "
+#define BT_AOK "AOK"
+#define BT_TIMEOUT 2000
 
-uint8_t btRxBuff[BT_RX_BUFF_SIZE], btRxIndex, btRxComplete, btRxByte, btRxStatus, btScannedCount, btBondedCount, scanDev;
+
+uint16_t btFifoIndex;
+uint8_t btFifo[500], btFifoByte;
+uint8_t btScannedCount, btBondedCount, btMessageMode;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();
 uint8_t bluetoothCMD_ACK(char *cmd, char *ack);
-uint8_t bluetoothCMD_Until(char *cmd, char *terminator, char *recvBuffer);
+uint8_t bluetoothCMD_Until(char *cmd, char *terminator, char (*recvBuffer)[]);
 uint8_t bluetoothCMD_Time(char *cmd, uint8_t s, char (*recvBuffer)[]);
 uint8_t bluetoothGetScannedDevices();
 uint8_t bluetoothGetBondedDevices();

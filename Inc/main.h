@@ -65,7 +65,8 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void USB_transmit_handle(char * buff, uint32_t len);
+void USB_received_handle(char * buff, uint32_t len);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
