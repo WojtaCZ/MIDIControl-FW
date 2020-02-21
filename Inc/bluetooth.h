@@ -12,9 +12,9 @@ extern struct menuitem bluetoothmenu[];
 #define BT_TIMEOUT 2000
 
 
-uint16_t btFifoIndex;
-uint8_t btFifo[500], btFifoByte;
-uint8_t btScannedCount, btBondedCount, btMessageMode;
+uint16_t btFifoIndex, btMsgFifoIndex;
+uint8_t btFifo[500], btFifoByte, btMsgFifo[500];
+uint8_t btScannedCount, btBondedCount, btCmdMode, btStatusMsg, btStreamOpen;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();
@@ -28,6 +28,11 @@ uint32_t countOccurances(char * buff, char * what);
 uint32_t replacechar(char *str, char orig, char rep);
 uint32_t splitString(char * string, char * delim, char ** array);
 uint8_t bluetoothConnectKnown();
+void bluetoothFifoFlush();
+void bluetoothMsgFifoFlush();
+uint8_t bluetoothEnterCMD();
+uint8_t bluetoothLeaveCMD();
+uint8_t bluetoothDecodeMsg();
 
 struct menuitem btScanedDevices[20];
 struct menuitem btBondedDevicesMenu[10];
@@ -38,9 +43,11 @@ struct btDevice{
 	uint8_t mactype;
 	char* uuid;
 	int8_t rssi;
+	long int pin;
 };
 
 struct btDevice btModule;
+struct btDevice btPairReq;
 struct btDevice btScanned[20];
 struct btDevice btBonded[10];
 

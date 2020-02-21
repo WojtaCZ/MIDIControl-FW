@@ -214,7 +214,7 @@ void oled_drawMenu(){
 	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
-	sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
+	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
 	//sprintf(oledHeader, "E: %d", loadingStat);
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
@@ -386,6 +386,7 @@ void oled_BtDevInfoSplash(struct btDevice * dev){
 
 
 	if(strlen(dev->name) > 9){
+		scrollMax = (strlen(dev->name) - 10);
 		ssd1306_SetCursor(14, 1);
 		char tmp[10];
 		memcpy(tmp, (char*)(dev->name)+scrollIndex, 9);
@@ -406,6 +407,60 @@ void oled_BtDevInfoSplash(struct btDevice * dev){
 	sprintf(msg, "RSSI: %ddB", dev->rssi);
 	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 43);
 	ssd1306_WriteString(msg, Font_7x10, White);
+
+
+	if(encoderclick){
+		oledType = OLED_MENU;
+		encoderclick = 0;
+	}
+}
+
+void oled_BtDevPairRequestSplash(struct btDevice * dev){
+
+	if(strlen(dev->name) > 9){
+		scrollMax = (strlen(dev->name) - 10);
+		ssd1306_SetCursor(14, 1);
+		char tmp[10];
+		memcpy(tmp, (char*)(dev->name)+scrollIndex, 9);
+		memset(tmp+9, 0, strlen(dev->name)-9);
+		ssd1306_WriteString(tmp, Font_11x18, White);
+	}else{
+		ssd1306_SetCursor((128-(strlen(dev->name)-1)*9)/2, 1);
+		ssd1306_WriteString(dev->name, Font_11x18, White);
+	}
+
+
+	char msg[25];
+
+	sprintf(msg, "Zada parovani");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 25);
+	ssd1306_WriteString(msg, Font_7x10, White);
+	sprintf(msg, "PIN");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 41);
+	ssd1306_WriteString(msg, Font_7x10, White);
+
+	sprintf(msg, "PIN %06ld", dev->pin);
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 41);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+
+	if(encoderclick){
+		oledType = OLED_MENU;
+		encoderclick = 0;
+	}
+}
+
+void oled_BtDevPairCompleteSplash(){
+
+	char msg[25];
+
+	sprintf(msg, "Uspesne");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_WriteString(msg, Font_11x18, White);
+	sprintf(msg, "sparovano");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 25);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
 
 
 	if(encoderclick){

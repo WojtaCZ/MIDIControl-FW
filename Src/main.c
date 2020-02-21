@@ -200,8 +200,6 @@ int main(void)
 	  }
 
 
-
-
 	/*  if(!alivePC){
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oled_refresh();
@@ -382,9 +380,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			loadingStat <<= 1;
 		}else loadingStat = 1;
 
-		if(btFifoIndex > 0){
-			CDC_Transmit_FS(btFifo, btFifoIndex-1);
-		}
 	}
 
 	if(htim->Instance == TIM2){
@@ -408,19 +403,22 @@ void USB_received_handle(char * buff, uint32_t len){
 		memcpy(&decoderBuffer, buff, msgLen+6);
 
 		//Pokud je pro toto zarizeni
-		if((buff[6] & 0x03) == ADDRESS_MAIN){
+		if((buff[6] & 0x03) == ADDRESS_MAIN && ((buff[6] & 0x04) >> 2) == 0){
 			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
-		}else if((buff[6] & 0x04) >> 3){
+		}else if((buff[6] & 0x04) >> 2){
 			//Pokud je broadcast
 			//Dekoduje a preposle na BT
-			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
-			if(btMessageMode){
-				//HAL_UART_Transmit_DMA(&huart2, decoderBuffer, msgLen+6);
+			if(!btCmdMode && btStreamOpen){
+				HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
 			}
+
+			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
+
+
 		}else{
 			//Jen preposle na BT
-			if(btMessageMode){
-				//HAL_UART_Transmit_DMA(&huart2, decoderBuffer, msgLen+6);
+			if(!btCmdMode && btStreamOpen){
+				HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
 			}
 		}
 
@@ -459,19 +457,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}else if(huart->Instance == USART2){
 		setStatus(DEV_BLUETOOTH, DEV_DATA);
 
-		btFifo[btFifoIndex++] = btFifoByte;
+		//Pokud dostal status message od modulu
+		if((btFifoByte == '%' || btStatusMsg) && !btCmdMode){
+			if(btFifoByte == '%') btStatusMsg = ~btStatusMsg;
+			if(btFifoByte == '%' && !btStatusMsg) bluetoothDecodeMsg();
+			btMsgFifo[btMsgFifoIndex++] = btFifoByte;
+		}else if(!btStatusMsg){
+			btFifo[btFifoIndex++] = btFifoByte;
+						//CDC_Transmit_FS("\n", 1);
+			//CDC_Transmit_FS(&btFifoByte, 1);
+						//CDC_Transmit_FS("\n", 1);
+		}
+
 
 		HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
-		//Prichazi data pro BT Receive Until
-		/*if(btRxStatus == 2){
-			//Zapise se prichozi byte
-			btRxBuff[btRxIndex++] = btRxByte;
 
-
-			//Znovu se zapne DMA
-			//HAL_UART_Receive_IT(&huart2, (uint8_t*)&btRxByte, 1);
-		}
-*/
 	}
 }
 
