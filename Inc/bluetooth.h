@@ -12,9 +12,9 @@ extern struct menuitem bluetoothmenu[];
 #define BT_TIMEOUT 2000
 
 
-uint16_t btFifoIndex, btMsgFifoIndex, btComMessageStartIndex, btMessageLen;
+uint16_t btFifoIndex, btMsgFifoIndex, btComMessageStartIndex, btMessageLen, btStatusMsgWD;
 uint8_t btFifo[500], btFifoByte, btMsgFifo[500];
-uint8_t btScannedCount, btBondedCount, btCmdMode, btStatusMsg, btStreamOpen, btNullCounter, btComMessageFlag, btComMessageSizeFlag;
+uint8_t btScannedCount, btBondedCount, btCmdMode, btStatusMsg, btStreamOpen, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();

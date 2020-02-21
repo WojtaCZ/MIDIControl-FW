@@ -46,7 +46,7 @@ extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 uint8_t b;
 
 uint16_t midiFifoIndex;
-uint8_t midiFifo[500];
+uint8_t midiFifo[500], uartMsgDecodeBuff[300];
 
 int readBytes = 0;
 /* USER CODE END Includes */
@@ -199,6 +199,11 @@ int main(void)
 		 workerBtBondDev = 0;
 	  }
 
+	  if(btMsgReceivedFlag){
+		  CDC_Transmit_FS(uartMsgDecodeBuff, btMessageLen+6);
+		  decodeMessage(uartMsgDecodeBuff, btMessageLen+6, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+		  btMsgReceivedFlag = 0;
+	  }
 
 	/*  if(!alivePC){
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
@@ -380,6 +385,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			loadingStat <<= 1;
 		}else loadingStat = 1;
 
+
+		if(btStatusMsg){
+			btStatusMsgWD++;
+
+			if(btStatusMsgWD >= 2){
+				bluetoothMsgFifoFlush();
+				btStatusMsg = 0;
+				btStatusMsgWD = 0;
+			}
+		}else btStatusMsgWD = 0;
 	}
 
 	if(htim->Instance == TIM2){
@@ -468,6 +483,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 				//Odpocitaji se 4 nully
 				btNullCounter++;
 			}else if(btNullCounter == 4 && btComMessageSizeFlag < 2){
+				btMsgReceivedFlag = 0;
 				//Odpocita se velikost
 				btComMessageSizeFlag++;
 				btMessageLen = 0;
@@ -477,26 +493,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 				btMessageLen = ((btFifo[btComMessageStartIndex+4] << 8) & 0xff00) | (btFifo[btComMessageStartIndex+5] & 0xff);
 
-				sprintf(oledHeader, "%d", btMessageLen);
-
-
 			}
 
 			btFifo[btFifoIndex++] = btFifoByte;
 
 			if(btMessageLen > 0 && (btFifoIndex) >= btMessageLen+btComMessageStartIndex+6 && btNullCounter == 4 && btComMessageSizeFlag == 2){
-				setStatus(FRONT1, DEV_ERR);
 
-				CDC_Transmit_FS((btFifo+btComMessageStartIndex), btMessageLen+6);
-
+				memcpy(uartMsgDecodeBuff, btFifo+btComMessageStartIndex, btMessageLen+6);
+				btMsgReceivedFlag = 1;
 				bluetoothFifoFlush();
 				btNullCounter = 0;
 				btComMessageSizeFlag = 0;
 			}
 
-
 		}
-
 
 		HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
 
