@@ -20,6 +20,10 @@ uint8_t bluetoothInit(){
 	btCmdMode = 1;
 	btStatusMsg = 0;
 	btStreamOpen = 0;
+	btNullCounter = 0;
+	btComMessageFlag = 0;
+	btComMessageSizeFlag = 0;
+	btMessageLen = 0;
 
 	//Zecne se prijem
 	HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);

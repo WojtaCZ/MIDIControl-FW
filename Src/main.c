@@ -463,10 +463,38 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 			if(btFifoByte == '%' && !btStatusMsg) bluetoothDecodeMsg();
 			btMsgFifo[btMsgFifoIndex++] = btFifoByte;
 		}else if(!btStatusMsg){
+
+			if(!btCmdMode && btFifoByte == 0 && btNullCounter < 4 && btComMessageSizeFlag < 2){
+				//Odpocitaji se 4 nully
+				btNullCounter++;
+			}else if(btNullCounter == 4 && btComMessageSizeFlag < 2){
+				//Odpocita se velikost
+				btComMessageSizeFlag++;
+				btMessageLen = 0;
+			}else if(btNullCounter == 4 && btComMessageSizeFlag == 2 && btMessageLen == 0){
+				//Zapise se index zacatku zpravy
+				btComMessageStartIndex = btFifoIndex-6;
+
+				btMessageLen = ((btFifo[btComMessageStartIndex+4] << 8) & 0xff00) | (btFifo[btComMessageStartIndex+5] & 0xff);
+
+				sprintf(oledHeader, "%d", btMessageLen);
+
+
+			}
+
 			btFifo[btFifoIndex++] = btFifoByte;
-						//CDC_Transmit_FS("\n", 1);
-			//CDC_Transmit_FS(&btFifoByte, 1);
-						//CDC_Transmit_FS("\n", 1);
+
+			if(btMessageLen > 0 && (btFifoIndex) >= btMessageLen+btComMessageStartIndex+6 && btNullCounter == 4 && btComMessageSizeFlag == 2){
+				setStatus(FRONT1, DEV_ERR);
+
+				CDC_Transmit_FS((btFifo+btComMessageStartIndex), btMessageLen+6);
+
+				bluetoothFifoFlush();
+				btNullCounter = 0;
+				btComMessageSizeFlag = 0;
+			}
+
+
 		}
 
 
