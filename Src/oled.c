@@ -7,6 +7,7 @@
 #include "bluetooth.h"
 #include "midiControl.h"
 
+
 struct menuitem mainmenu[] = {
 		{"Prehraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Nahraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
@@ -34,6 +35,12 @@ struct menuitem organmenu[] = {
 		{"Vypnout", 0, &Font_11x18, 0, 0, 0, 2, &mainmenu[2].name/*, 0, 0*/},
 		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
 };
+
+struct menuitem controllermenu[] = {
+		{"Odstranit", 0, &Font_11x18, 0, 0, 0, 2, &btBondedDevicesMenu[0].name/*, 0, 0*/},
+		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
+};
+
 
 
 
@@ -97,6 +104,7 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 1:
+				workerBtPairDev = 1;
 
 			break;
 
@@ -120,6 +128,22 @@ void oled_menuOnclick(int menupos){
 	}else if(strcmp(dispmenuname, "btBondedDevicesMenu") == 0){
 		if(menupos == btBondedCount){
 			oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
+		}else{
+			btSelectedController = menupos;
+			oled_setDisplayedMenu("controllermenu",&controllermenu, sizeof(controllermenu), 0);
+		}
+	}else if(strcmp(dispmenuname, "controllermenu") == 0){
+		switch(menupos){
+			case 0:
+				workerBtRemoveController = 1;
+			break;
+
+			case 1:
+				oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
+			break;
+
+			default:
+			break;
 		}
 	}else if(strcmp(dispmenuname, "organmenu") == 0){
 		switch(menupos){
@@ -182,6 +206,7 @@ void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusi
 	memcpy(&dispmenu, menu, menusize);
 	dispmenusubmenu = issubmenu;
 	encoderposOld = -1;
+	encoderpos = 0;
 	oledType = OLED_MENU;
 	//HAL_TIM_Base_Start_IT(&htim2);
 }

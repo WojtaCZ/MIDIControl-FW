@@ -1,6 +1,7 @@
 #include "msgDecoder.h"
 #include "midiControl.h"
 #include "oled.h"
+#include "usart.h"
 #include <stdlib.h>
 
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
@@ -105,6 +106,14 @@ void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * 
 	buffer[6] = ((type & 0x07) << 5) | ((src & 0x3) << 3) | ((broadcast & 0x01) << 2) | (dest & 0x03);
 	memcpy(&buffer[7], msg, len);
 
-	CDC_Transmit_FS(buffer, len+6);
+	if(broadcast){
+		CDC_Transmit_FS(buffer, len+6);
+		HAL_UART_Transmit_IT(&huart2, buffer, len+6);
+	}else if(dest == ADDRESS_PC){
+		CDC_Transmit_FS(buffer, len+6);
+	}else if(dest == ADDRESS_CONTROLLER){
+		HAL_UART_Transmit_IT(&huart2, buffer, len+6);
+	}
+
 }
 

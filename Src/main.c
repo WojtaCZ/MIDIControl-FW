@@ -200,9 +200,29 @@ int main(void)
 	  }
 
 	  if(btMsgReceivedFlag){
-		  CDC_Transmit_FS(uartMsgDecodeBuff, btMessageLen+6);
 		  decodeMessage(uartMsgDecodeBuff, btMessageLen+6, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 		  btMsgReceivedFlag = 0;
+	  }
+
+	  if(workerBtRemoveController){
+	  		if(!btCmdMode) bluetoothEnterCMD();
+	  		char cmd[10];
+	  		sprintf(cmd,"U,%d", (btSelectedController+1));
+	  		bluetoothCMD_ACK(cmd, BT_AOK);
+	  		if(btCmdMode) bluetoothLeaveCMD();
+	  		workerBtRemoveController = 0;
+	  }
+
+	  if(workerBtPairDev){
+		  if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
+		  if(bluetoothCMD_ACK("C,0,D88039FE5996\r", "%STREAM_OPEN")) setStatus(FRONT2, DEV_OK);
+		  btStreamOpen = 1;
+		  btCmdMode = 0;
+		  //if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
+		  if(bluetoothCMD_ACK("B\r", "%BONDED")) setStatus(FRONT3, DEV_OK);
+		  bluetoothLeaveCMD();
+
+		  workerBtPairDev = 0;
 	  }
 
 	/*  if(!alivePC){

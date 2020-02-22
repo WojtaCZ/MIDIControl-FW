@@ -10,6 +10,8 @@ void midiControl_init(){
 	aliveRemote = 0;
 	alivePCCounter = 0;
 	aliveRemoteCounter = 0;
+	workerBtPairDev = 0;
+	workerBtRemoveController = 0;
 }
 
 void midiControl_display_getState(){

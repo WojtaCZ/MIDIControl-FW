@@ -14,7 +14,7 @@ uint8_t alivePC, aliveRemote, alivePCCounter, aliveRemoteCounter;
 //Pomocne promenne pro statusy
 uint8_t midiStatusOld;
 //Flagy pro "workery"
-uint8_t workerBtScanDev, workerBtBondDev;
+uint8_t workerBtScanDev, workerBtBondDev, workerBtPairDev, workerBtRemoveController;
 
 void midiControl_init();
 void midiControl_display_getState();

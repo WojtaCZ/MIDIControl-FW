@@ -25,6 +25,7 @@ uint8_t bluetoothInit(){
 	btComMessageSizeFlag = 0;
 	btMessageLen = 0;
 	btMsgReceivedFlag = 0;
+	btSelectedController = 0;
 
 	//Zecne se prijem
 	HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
@@ -39,6 +40,7 @@ uint8_t bluetoothInit(){
 	//Zapne se CMD
 	if(!bluetoothEnterCMD()) return 0;
 
+	//bluetoothCMD_ACK("U,Z\r", BT_AOK);
 
 	//Dev info a UART
 	if(!bluetoothCMD_ACK("GS\r", "C0")){
@@ -107,13 +109,16 @@ uint8_t bluetoothLeaveCMD(){
 
 uint8_t bluetoothDecodeMsg(){
 	char * index = 0;
+
+	CDC_Transmit_FS(btMsgFifo, btMsgFifoIndex);
+
 	if(strstr((char *)btMsgFifo, "%BONDED") != 0){
 		btStreamOpen = 1;
 	}
 
 	if(strstr((char *)btMsgFifo, "%CONNECT") != 0){
 		index = strstr((char *)btMsgFifo, "%CONNECT");
-		sscanf((char *)index+9, "%*d,%02X%02X%02X%02X%02X%02X", &btPairReq.mac[0], &btPairReq.mac[1], &btPairReq.mac[2], &btPairReq.mac[3], &btPairReq.mac[4]);
+		sscanf((char *)index+9, "%*d,%02X%02X%02X%02X%02X%02X", &btPairReq.mac[0], &btPairReq.mac[1], &btPairReq.mac[2], &btPairReq.mac[3], &btPairReq.mac[4], &btPairReq.mac[5]);
 		sprintf(btPairReq.name, "%02X-%02X-%02X-%02X-%02X-%02X", btPairReq.mac[0], btPairReq.mac[1], btPairReq.mac[2], btPairReq.mac[3], btPairReq.mac[4], btPairReq.mac[5]);
 	}
 
@@ -131,6 +136,10 @@ uint8_t bluetoothDecodeMsg(){
 
 	if(strstr((char *)btMsgFifo, "%STREAM_OPEN") != 0){
 		btStreamOpen = 1;
+	}
+
+	if(strstr((char *)btMsgFifo, "%KEY_REQ") != 0){
+		sprintf(oledHeader, "Req");
 	}
 
 	if(strstr((char *)btMsgFifo, "%SECURED") != 0){
@@ -153,6 +162,9 @@ uint8_t bluetoothCMD_ACK(char *cmd, char *ack){
 		uint32_t now = HAL_GetTick();
 		while(strstr((char *)btFifo, ack) == 0 && HAL_GetTick() - now < BT_TIMEOUT);
 
+		memcpy(btMsgFifo, btFifo, btFifoIndex);
+		btMsgFifoIndex = btFifoIndex;
+		bluetoothDecodeMsg();
 		bluetoothFifoFlush();
 
 		if(HAL_GetTick() - now >= BT_TIMEOUT) return 0;

@@ -14,7 +14,7 @@ extern struct menuitem bluetoothmenu[];
 
 uint16_t btFifoIndex, btMsgFifoIndex, btComMessageStartIndex, btMessageLen, btStatusMsgWD;
 uint8_t btFifo[500], btFifoByte, btMsgFifo[500];
-uint8_t btScannedCount, btBondedCount, btCmdMode, btStatusMsg, btStreamOpen, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag;
+uint8_t btScannedCount, btBondedCount, btCmdMode, btStatusMsg, btStreamOpen, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag, btSelectedController;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();
@@ -39,10 +39,10 @@ struct menuitem btBondedDevicesMenu[10];
 
 struct btDevice{
 	char name[50];
-	uint8_t mac[6];
-	uint8_t mactype;
+	unsigned int mac[6];
+	unsigned int mactype;
 	char* uuid;
-	int8_t rssi;
+	signed char rssi;
 	long int pin;
 };
 
