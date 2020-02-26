@@ -16,7 +16,7 @@
 #define DEV_OK 			1
 #define DEV_DATA 		2
 #define DEV_LOAD 		3
-
+#define DEV_CLR			4
 
 #define DEV_USB				0
 #define DEV_DISP			1

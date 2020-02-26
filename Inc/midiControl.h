@@ -22,7 +22,9 @@ void midiControl_current_On();
 void midiControl_current_Off();
 void midiControl_midiIO_init();
 uint8_t midiControl_midiIO_getState();
-void midiControl_record(uint8_t initiator);
+void midiControl_record(uint8_t initiator, char * songname);
 void midiControl_keepalive_process();
+uint8_t midiControl_setDisplay(uint16_t cislo_pisne, uint8_t cislo_sloky, uint8_t barva, uint8_t napev);
+uint8_t midiControl_setDisplayRaw(uint8_t * data, uint16_t len);
 
 #endif

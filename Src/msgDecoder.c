@@ -34,19 +34,22 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 	char msgType = msg[6];
 
 	uint8_t src = ((msg[6] & 0x18) >> 3);
+	uint8_t type = ((msgType & 0xE0) >> 5);
 
-	if((msgType & 0xE0) == 0x20){
+	if(type == INTERNAL){
 		if(msg[7] == INTERNAL_COM){
 			if(msg[8] == INTERNAL_COM_PLAY){
 				/*if(midiPlay(msg+9)){
 					msgAOK(0, msgType, len, 0, NULL);
 				}else msgERR(0, msgType, len);*/
+				midiControl_play(src, &msg[9]);
 			}else if(msg[8] == INTERNAL_COM_STOP){
 				/*if(midiStop()){
 					msgAOK(0, msgType, len, 0, NULL);
 				}else msgERR(0, msgType, len);*/
+				midiControl_stop(src);
 			}else if(msg[8] == INTERNAL_COM_REC){
-				midiControl_record(src);
+				midiControl_record(src, &msg[9]);
 				msgAOK(0, msgType, len, 0, NULL);
 			}else if(msg[8] == INTERNAL_COM_KEEPALIVE){
 				if(src == ADDRESS_CONTROLLER){
@@ -66,7 +69,11 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 				msgAOK(0, msgType, len, 0, NULL);
 			}else msgERR(0, msgType, len);
 
+		}else if(msg[7] == INTERNAL_DISP){
+
 		}else msgERR(0, msgType, len);
+	}else if(type == EXTERNAL_DISP){
+		midiControl_setDisplayRaw((uint8_t*)&msg[7], len-7);
 	}else msgERR(0, msgType, len);
 }
 
@@ -101,18 +108,18 @@ void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * 
 	buffer[1] = 0;
 	buffer[2] = 0;
 	buffer[3] = 0;
-	buffer[4] = (len >> 4) & 0xff;
-	buffer[5] = len & 0xff;
+	buffer[4] = ((len+1) >> 4) & 0xff;
+	buffer[5] = (len+1) & 0xff;
 	buffer[6] = ((type & 0x07) << 5) | ((src & 0x3) << 3) | ((broadcast & 0x01) << 2) | (dest & 0x03);
 	memcpy(&buffer[7], msg, len);
 
 	if(broadcast){
-		CDC_Transmit_FS(buffer, len+6);
-		HAL_UART_Transmit_IT(&huart2, buffer, len+6);
+		CDC_Transmit_FS(buffer, len+7);
+		HAL_UART_Transmit_IT(&huart2, buffer, len+7);
 	}else if(dest == ADDRESS_PC){
-		CDC_Transmit_FS(buffer, len+6);
+		CDC_Transmit_FS(buffer, len+7);
 	}else if(dest == ADDRESS_CONTROLLER){
-		HAL_UART_Transmit_IT(&huart2, buffer, len+6);
+		HAL_UART_Transmit_IT(&huart2, buffer, len+7);
 	}
 
 }

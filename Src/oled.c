@@ -6,6 +6,7 @@
 #include <rtc.h>
 #include "bluetooth.h"
 #include "midiControl.h"
+#include "devStatus.h"
 
 
 struct menuitem mainmenu[] = {
@@ -54,10 +55,14 @@ void oled_menuOnclick(int menupos){
 
 		switch(menupos){
 			case 0:
+				oled_setDisplayedSplash(oled_playingSplash, "Mozartova sonata");
+				oled_refreshPause();
 
 			break;
 
 			case 1:
+				oled_setDisplayedSplash(oled_recordingSplash, "Mozartova sonata");
+				oled_refreshPause();
 			break;
 
 			case 2:
@@ -180,13 +185,13 @@ void oled_begin(){
 	encoderposOld = -1;
 	scrollPause = 0;
 	scrollPauseDone = 0;
+	loadingToggle = 0;
 	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_TIM_Base_Start_IT(&htim4);
 	oledHeader = (char*)malloc(50);
 }
 
 void oled_refresh(){
-	if(!refreshHalt){
 		ssd1306_Fill(0);
 		if(oledType == OLED_MENU){
 			oled_drawMenu();
@@ -194,8 +199,6 @@ void oled_refresh(){
 			(*splashFunction)(splashParams);
 			ssd1306_UpdateScreen(0);
 		}
-	}
-
 }
 
 void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusize, int issubmenu){
@@ -354,7 +357,7 @@ void oled_drawMenu(){
 
 
 void oled_refreshPause(){
-	oled_refresh();
+	//oled_refresh();
 	refreshHalt = 1;
 }
 
@@ -490,6 +493,95 @@ void oled_BtDevPairCompleteSplash(){
 
 	if(encoderclick){
 		oledType = OLED_MENU;
+		encoderclick = 0;
+	}
+}
+
+void oled_playingSplash(char * songname){
+
+	char msg[25];
+
+	sprintf(msg, "Prehravam");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	if(strlen(songname) > 9){
+			scrollMax = (strlen(songname) - 10);
+			ssd1306_SetCursor(14, 25);
+			char tmp[10];
+			memcpy(tmp, (char*)(songname)+scrollIndex, 9);
+			memset(tmp+9, 0, strlen(songname)-9);
+			ssd1306_WriteString(tmp, Font_11x18, White);
+		}else{
+			ssd1306_SetCursor((128-(strlen(songname)-1)*9)/2, 25);
+			ssd1306_WriteString(songname, Font_11x18, White);
+		}
+
+	for(int x = 0; x < 128; x++){
+		for(int y = 0; y < 12; y++){
+			ssd1306_DrawPixel(x, y+51, White);
+		}
+	}
+
+	sprintf(msg, "Zastavit");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 53);
+	ssd1306_WriteString(msg, Font_7x10, Black);
+
+	if(loadingToggle){
+		setStatus(FRONT2, DEV_OK);
+		setStatus(FRONT3, DEV_OK);
+	}else setStatusAll(1, DEV_CLR);
+
+
+	if(encoderclick){
+		oledType = OLED_MENU;
+		oled_refreshResume();
+		setStatusAll(1, DEV_CLR);
+		encoderclick = 0;
+	}
+}
+
+
+void oled_recordingSplash(char * songname){
+
+	char msg[25];
+
+	sprintf(msg, "Nahravam");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	if(strlen(songname) > 9){
+			scrollMax = (strlen(songname) - 10);
+			ssd1306_SetCursor(14, 25);
+			char tmp[10];
+			memcpy(tmp, (char*)(songname)+scrollIndex, 9);
+			memset(tmp+9, 0, strlen(songname)-9);
+			ssd1306_WriteString(tmp, Font_11x18, White);
+		}else{
+			ssd1306_SetCursor((128-(strlen(songname)-1)*9)/2, 25);
+			ssd1306_WriteString(songname, Font_11x18, White);
+		}
+
+	for(int x = 0; x < 128; x++){
+		for(int y = 0; y < 12; y++){
+			ssd1306_DrawPixel(x, y+51, White);
+		}
+	}
+
+	sprintf(msg, "Zastavit");
+	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 53);
+	ssd1306_WriteString(msg, Font_7x10, Black);
+
+	if(loadingToggle){
+		setStatus(FRONT2, DEV_ERR);
+		setStatus(FRONT3, DEV_ERR);
+	}else setStatusAll(1, DEV_CLR);
+
+
+	if(encoderclick){
+		oledType = OLED_MENU;
+		oled_refreshResume();
+		setStatusAll(1, DEV_CLR);
 		encoderclick = 0;
 	}
 }

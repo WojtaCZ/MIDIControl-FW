@@ -361,10 +361,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 
 		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) && GPIO_Pin_Flag == GPIO_PIN_1){
-			setStatus(FRONT3, DEV_DATA);
-			//HAL_GPIO_TogglePin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
-			//oledType = OLED_MENU;
 			encoderclick = 1;
+			if(refreshHalt) oled_refresh();
 		}
 
 		HAL_NVIC_EnableIRQ(EXTI0_IRQn);
@@ -405,6 +403,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			loadingStat <<= 1;
 		}else loadingStat = 1;
 
+		loadingToggle = ~loadingToggle;
 
 		if(btStatusMsg){
 			btStatusMsgWD++;
@@ -415,11 +414,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				btStatusMsgWD = 0;
 			}
 		}else btStatusMsgWD = 0;
+
+		if(refreshHalt) oled_refresh();
 	}
 
 	if(htim->Instance == TIM2){
 		//Obnovi se oled displej
-		oled_refresh();
+		if(!refreshHalt) oled_refresh();
 		proccessPendingStatus();
 	}
 
