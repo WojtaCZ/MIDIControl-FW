@@ -50,7 +50,7 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 				midiControl_stop(src);
 			}else if(msg[8] == INTERNAL_COM_REC){
 				midiControl_record(src, &msg[9]);
-				msgAOK(0, msgType, len, 0, NULL);
+				//msgAOK(0, msgType, len, 0, NULL);
 			}else if(msg[8] == INTERNAL_COM_KEEPALIVE){
 				if(src == ADDRESS_CONTROLLER){
 					aliveRemote = 1;

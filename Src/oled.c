@@ -7,7 +7,7 @@
 #include "bluetooth.h"
 #include "midiControl.h"
 #include "devStatus.h"
-
+#include "msgDecoder.h"
 
 struct menuitem mainmenu[] = {
 		{"Prehraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
@@ -55,7 +55,7 @@ void oled_menuOnclick(int menupos){
 
 		switch(menupos){
 			case 0:
-				oled_setDisplayedSplash(oled_playingSplash, "Mozartova sonata");
+				midiControl_play(ADDRESS_MAIN, "Testovaci");
 				oled_refreshPause();
 
 			break;

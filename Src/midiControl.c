@@ -78,15 +78,20 @@ void midiControl_midiIO_init(){
 
 void midiControl_record(uint8_t initiator, char * songname){
 	//Spusteno z PC
-	if(initiator == 0x00){
+	if(initiator == ADDRESS_PC){
 		oled_setDisplayedSplash(oled_recordingSplash, songname);
 		//sendMessage();
-	}else if(initiator == 0x01){
+	}else if(initiator == ADDRESS_CONTROLLER){
 	//Spusteno ovladacem
 
-	}else if(initiator == 0x02){
+	}else if(initiator == ADDRESS_MAIN){
 	//Spusteno ze zakladnove stanice
-
+	char msg[100];
+	msg[0] = INTERNAL_COM;
+	msg[1] = INTERNAL_COM_REC;
+	memcpy(&msg[2], songname, strlen(songname));
+	sendMsg(ADDRESS_MAIN, ADDRESS_OTHER, 1, INTERNAL, msg, strlen(songname)+2);
+	oled_setDisplayedSplash(oled_recordingSplash, songname);
 	}
 
 
@@ -102,6 +107,11 @@ void midiControl_play(uint8_t initiator, char * songname){
 
 	}else if(initiator == 0x02){
 	//Spusteno ze zakladnove stanice
+		char msg[100];
+		msg[0] = INTERNAL_COM;
+		msg[1] = INTERNAL_COM_PLAY;
+		memcpy(&msg[2], songname, strlen(songname));
+		sendMsg(ADDRESS_MAIN, ADDRESS_OTHER, 1, INTERNAL, msg, strlen(songname)+2);
 		oled_setDisplayedSplash(oled_playingSplash, songname);
 	}
 
