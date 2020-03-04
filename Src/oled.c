@@ -537,6 +537,7 @@ void oled_playingSplash(char * songname){
 		oledType = OLED_MENU;
 		oled_refreshResume();
 		setStatusAll(1, DEV_CLR);
+		midiControl_stop(ADDRESS_MAIN);
 		encoderclick = 0;
 	}
 }
@@ -582,6 +583,7 @@ void oled_recordingSplash(char * songname){
 		oledType = OLED_MENU;
 		oled_refreshResume();
 		setStatusAll(1, DEV_CLR);
+		midiControl_stop(ADDRESS_MAIN);
 		encoderclick = 0;
 	}
 }

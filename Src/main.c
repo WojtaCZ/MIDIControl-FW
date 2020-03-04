@@ -216,10 +216,12 @@ int main(void)
 	  if(workerBtPairDev){
 		  if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
 		  if(bluetoothCMD_ACK("C,0,D88039FE5996\r", "%STREAM_OPEN")) setStatus(FRONT2, DEV_OK);
-		  btStreamOpen = 1;
 		  btCmdMode = 0;
 		  //if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
-		  if(bluetoothCMD_ACK("B\r", "%BONDED")) setStatus(FRONT3, DEV_OK);
+		  if(bluetoothCMD_ACK("B\r", "%BONDED")){
+			  setStatus(FRONT3, DEV_OK);
+			  btStreamOpen = 1;
+		  }
 		  bluetoothLeaveCMD();
 
 		  workerBtPairDev = 0;
