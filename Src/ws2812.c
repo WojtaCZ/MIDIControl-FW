@@ -1,17 +1,19 @@
 #include "ws2812.h"
 
+//Handly citacu
 static uint8_t LEDbuffer[STRIP_NUMBER][LED_BUFFER_SIZE];
 extern TIM_HandleTypeDef htim17;
 extern TIM_HandleTypeDef htim15;
 
 void ws2812_init(void) {
+	//Oba buffery se vynuluji
 	fillBufferBlack(0);
 	fillBufferBlack(1);
-	HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *) LEDbuffer[0],
-			LED_BUFFER_SIZE);
 
-	HAL_TIM_PWM_Start_DMA(&htim15, TIM_CHANNEL_1, (uint32_t *) LEDbuffer[1],
-				LED_BUFFER_SIZE);
+	//Zapnou se citace
+	HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *) LEDbuffer[0], LED_BUFFER_SIZE);
+
+	HAL_TIM_PWM_Start_DMA(&htim15, TIM_CHANNEL_1, (uint32_t *) LEDbuffer[1], LED_BUFFER_SIZE);
 }
 
 void setLEDcolor(uint8_t strip, uint32_t LEDnumber, uint8_t RED, uint8_t GREEN, uint8_t BLUE) {

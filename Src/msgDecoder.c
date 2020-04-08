@@ -3,32 +3,13 @@
 #include "oled.h"
 #include "usart.h"
 #include <stdlib.h>
+#include "devStatus.h"
+#include "midiControl.h"
 
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
-/*void decodeMessage(char *msg, uint32_t len){
-	sprintf(oledHeader, "%s", msg);
 
-	switch(msg[0]){
-		case MSG_TYPE_INTERNAL:
-			internalMessageDecoder(msg, len);
-		break;
-
-		case MSG_TYPE_BLUETOOTH:
-
-		break;
-
-		case MSG_TYPE_DISPLAY:
-
-		break;
-	}
-
-	//Odešle se ACK
-	uint8_t answer[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x02, msg[0], 0x01};
-	CDC_Transmit_FS(answer, sizeof(answer));
-}
-*/
-
+//Rutina pro dekodovani zprav komunikacniho protokolu zarizeni
 void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 	//Internal
 	char msgType = msg[6];
@@ -36,9 +17,11 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 	uint8_t src = ((msg[6] & 0x18) >> 3);
 	uint8_t type = ((msgType & 0xE0) >> 5);
 
+
 	if(type == INTERNAL){
 		if(msg[7] == INTERNAL_COM){
 			if(msg[8] == INTERNAL_COM_PLAY){
+				msg[len] = 0;
 				midiControl_play(src, &msg[9]);
 			}else if(msg[8] == INTERNAL_COM_STOP){
 				midiControl_stop(src);
@@ -67,10 +50,28 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 		}else msgERR(0, msgType, len);
 	}else if(type == EXTERNAL_DISP){
 		midiControl_setDisplayRaw((uint8_t*)&msg[7], len-7);
-	}else msgERR(0, msgType, len);
+	}else if(type == AOKERR){
+		if((msg[7] & 0x80) == AOK){
+
+			//Pokud se jedna o odpoved na zpravu z hl. jednotky do PC
+			if(msg[8] == 0x30){
+				if(workerGetSongs.assert && workerGetSongs.status == WORKER_WAITING){
+					workerGetSongs.status = WORKER_OK;
+					strToSongMenu(&msg[11], &songMenuSize);
+				}
+			}
+		}else if((msg[7] & 0x80) == ERR){
+			if(workerGetSongs.assert && workerGetSongs.status == WORKER_WAITING){
+				workerGetSongs.status = WORKER_ERR;
+			}
+		}
+	}else{
+		msgERR(0, msgType, len);
+	}
 }
 
 
+//Odesle zpravu typu AOK
 void msgAOK(uint8_t aokType, uint8_t recType, uint16_t recSize, uint16_t dataSize, char * msg){
 	char * buffer = (char*)malloc(dataSize);
 	//Utvori se AOK znak s typem
@@ -83,6 +84,7 @@ void msgAOK(uint8_t aokType, uint8_t recType, uint16_t recSize, uint16_t dataSiz
 	free(buffer);
 }
 
+//Odesle zpravu typu ERR
 void msgERR(uint8_t errType, uint8_t recType, uint16_t recSize){
 	char * buffer = (char*)malloc(5);
 	//Utvori se ERR znak s typem
@@ -95,6 +97,7 @@ void msgERR(uint8_t errType, uint8_t recType, uint16_t recSize){
 	free(buffer);
 }
 
+//Odesle libovolnou zpravu
 void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * msg, uint16_t len){
 	uint8_t * buffer = (uint8_t*)malloc(len+7);
 	buffer[0] = 0;
@@ -106,12 +109,13 @@ void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * 
 	buffer[6] = ((type & 0x07) << 5) | ((src & 0x3) << 3) | ((broadcast & 0x01) << 2) | (dest & 0x03);
 	memcpy(&buffer[7], msg, len);
 
+	//Podle cile ji odesle na ruzne rozhrani
 	if(broadcast){
 		CDC_Transmit_FS(buffer, len+7);
-		HAL_UART_Transmit_IT(&huart2, buffer, len+7);
+		if(btStreamOpen && !btCmdMode) HAL_UART_Transmit_IT(&huart2, buffer, len+7);
 	}else if(dest == ADDRESS_PC){
 		CDC_Transmit_FS(buffer, len+7);
-	}else if(dest == ADDRESS_CONTROLLER){
+	}else if(dest == ADDRESS_CONTROLLER && btStreamOpen && !btCmdMode){
 		HAL_UART_Transmit_IT(&huart2, buffer, len+7);
 	}
 

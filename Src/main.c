@@ -45,8 +45,7 @@ uint16_t GPIO_Pin_Flag;
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 uint8_t b;
 
-uint16_t midiFifoIndex;
-uint8_t midiFifo[500], uartMsgDecodeBuff[300];
+
 
 int readBytes = 0;
 /* USER CODE END Includes */
@@ -158,9 +157,10 @@ int main(void)
   }
 
   //Prohleda zarizeni v okoli a pripoji se ke znamemu ovladaci
- /* if(bluetoothConnectKnown()){
-	  setStatus(FRONT1, DEV_OK);
-  }*/
+  if(bluetoothConnectKnown()){
+	  btStreamOpen = 1;
+	  btCmdMode = 0;
+  }
 
   midiControl_midiIO_getState();
 
@@ -171,6 +171,8 @@ int main(void)
 
   //Skoci do menu
   oledType = OLED_MENU;
+
+  HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
 
 
 
@@ -187,16 +189,18 @@ int main(void)
   {
 
 	  //Pokud byl request na skenovani
-	  if(workerBtScanDev){
-		 bluetoothGetScannedDevices();
-		 oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
-		 workerBtScanDev = 0;
+	  if(workerBtScanDev.assert){
+		 if(bluetoothGetScannedDevices()){
+			 oled_setDisplayedMenu("btScanedDevices", &btScanedDevices, sizeof(btScanedDevices)-(20-btScannedCount-1)*sizeof(btScanedDevices[19]), 0);
+		 }else oled_setDisplayedSplash(oled_NothingFound, NULL);
+		 workerBtScanDev.assert = 0;
 	  }
 
-	  if(workerBtBondDev){
-		 bluetoothGetBondedDevices();
-		 oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
-		 workerBtBondDev = 0;
+	  if(workerBtBondDev.assert){
+		 if(bluetoothGetBondedDevices()){
+			 oled_setDisplayedMenu("btBondedDevicesMenu", &btBondedDevicesMenu, sizeof(btBondedDevicesMenu)-(10-btBondedCount-1)*sizeof(btBondedDevicesMenu[9]), 0);
+		 }else oled_setDisplayedSplash(oled_NothingFound, NULL);
+		 workerBtBondDev.assert = 0;
 	  }
 
 	  if(btMsgReceivedFlag){
@@ -204,27 +208,42 @@ int main(void)
 		  btMsgReceivedFlag = 0;
 	  }
 
-	  if(workerBtRemoveController){
+	  if(workerBtRemoveController.assert){
 	  		if(!btCmdMode) bluetoothEnterCMD();
 	  		char cmd[10];
 	  		sprintf(cmd,"U,%d", (btSelectedController+1));
 	  		bluetoothCMD_ACK(cmd, BT_AOK);
 	  		if(btCmdMode) bluetoothLeaveCMD();
-	  		workerBtRemoveController = 0;
+	  		workerBtRemoveController.assert = 0;
 	  }
 
-	  if(workerBtPairDev){
-		  if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
-		  if(bluetoothCMD_ACK("C,0,D88039FE5996\r", "%STREAM_OPEN")) setStatus(FRONT2, DEV_OK);
-		  btCmdMode = 0;
-		  //if(bluetoothEnterCMD()) setStatus(FRONT1, DEV_OK);
-		  if(bluetoothCMD_ACK("B\r", "%BONDED")){
-			  setStatus(FRONT3, DEV_OK);
-			  btStreamOpen = 1;
-		  }
-		  bluetoothLeaveCMD();
+	  if(workerBtConnect.assert){
+		  bluetoothConnect(workerBtConnectMAC);
 
-		  workerBtPairDev = 0;
+		  workerBtConnect.assert = 0;
+	  }
+
+
+	  if(workerBtBond.assert){
+	  		  bluetoothBond();
+	  		  workerBtBond.assert = 0;
+	  }
+
+	  if(workerBtScanBondable.assert){
+		  if(bluetoothGetBondableDevices()){
+			  oled_setDisplayedMenu("btBondableDevices", &btBondableDevices, sizeof(btBondableDevices)-(20-btBondableCount-1)*sizeof(btBondableDevices[19]), 0);
+		  }else oled_setDisplayedSplash(oled_NothingFound, NULL);
+		  workerBtScanBondable.assert = 0;
+	  }
+
+	  if(workerGetSongs.assert){
+		  if(workerGetSongs.status == WORKER_OK){
+		      oled_setDisplayedMenu("songmenu",&songMenu, (songMenuSize+1)*sizeof(struct menuitem), 1);
+			  workerGetSongs.assert = 0;
+		  }else if(workerGetSongs.status == WORKER_ERR){
+			  oled_setDisplayedSplash(oled_ErrorSplash, "pri nacitani pisni");
+			  workerGetSongs.assert = 0;
+		  }
 	  }
 
 	/*  if(!alivePC){
@@ -347,13 +366,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		HAL_NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn);
 		HAL_NVIC_DisableIRQ(TIM1_TRG_COM_TIM17_IRQn);
 		HAL_NVIC_DisableIRQ(TIM1_BRK_TIM15_IRQn);
-		 HAL_TIM_Base_Stop_IT(&htim1);
+		HAL_TIM_Base_Stop_IT(&htim1);
 
-		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
-			encoderpos++;
-		}else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
-			encoderpos--;
+		if(!encoderDirSwap){
+			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
+				encoderpos++;
+			}else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
+				encoderpos--;
+			}
+		}else{
+			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
+				encoderpos--;
+			}else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) && GPIO_Pin_Flag == GPIO_PIN_0){
+				encoderpos++;
+			}
 		}
+
 
 		//Dopocita se pozice v dispmenu
 		if(encoderpos >= (signed int)(dispmenusize)-1){
@@ -475,11 +503,11 @@ void USB_transmit_handle(char * buff, uint32_t len){
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 	if(huart->Instance == USART3){
-		if(midiStatus == MIDI_A){
+		/*if(midiStatus == MIDI_A){
 			setStatus(DEV_MIDIA, DEV_DATA);
 		}else if(midiStatus == MIDI_B){
 			setStatus(DEV_MIDIB, DEV_DATA);
-		}
+		}*/
 
 
 		if(midiFifoIndex > 0){

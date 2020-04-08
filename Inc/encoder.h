@@ -2,6 +2,6 @@
 #define encoder_h
 
 int encoderpos, encoderposOld;
-int encoderclick;
+int encoderclick, encoderDirSwap;
 
 #endif

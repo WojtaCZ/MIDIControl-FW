@@ -57,7 +57,7 @@ Src/bluetooth.o: ../Src/bluetooth.c D:/STM/MIDIControl/Inc/bluetooth.h \
  D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h \
  D:/STM/MIDIControl/Inc/bluetooth.h D:/STM/MIDIControl/Inc/devStatus.h \
  D:/STM/MIDIControl/Inc/main.h D:/STM/MIDIControl/Inc/usart.h \
- D:/STM/MIDIControl/Inc/midiControl.h
+ D:/STM/MIDIControl/Inc/midiControl.h D:/STM/MIDIControl/Inc/oled.h
 
 D:/STM/MIDIControl/Inc/bluetooth.h:
 
@@ -188,3 +188,5 @@ D:/STM/MIDIControl/Inc/main.h:
 D:/STM/MIDIControl/Inc/usart.h:
 
 D:/STM/MIDIControl/Inc/midiControl.h:
+
+D:/STM/MIDIControl/Inc/oled.h:
