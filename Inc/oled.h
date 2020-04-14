@@ -53,7 +53,7 @@ void oled_setDisplayedSplash(void (*funct)(), void * params);
 void oled_playingSplash(char * songname);
 void oled_recordingSplash(char * songname);
 void oled_refreshPause();
-void oled_refreshresume();
+void oled_refreshResume();
 void oled_ErrorSplash(char * msg);
 
 #endif

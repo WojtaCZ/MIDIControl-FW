@@ -56,7 +56,8 @@ Src/msgDecoder.o: ../Src/msgDecoder.c D:/STM/MIDIControl/Inc/msgDecoder.h \
  D:/STM/MIDIControl/Inc/encoder.h D:/STM/MIDIControl/Inc/ssd1306.h \
  D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h \
  D:/STM/MIDIControl/Inc/bluetooth.h D:/STM/MIDIControl/Inc/oled.h \
- D:/STM/MIDIControl/Inc/usart.h D:/STM/MIDIControl/Inc/devStatus.h
+ D:/STM/MIDIControl/Inc/usart.h D:/STM/MIDIControl/Inc/devStatus.h \
+ D:/STM/MIDIControl/Inc/rtc.h
 
 D:/STM/MIDIControl/Inc/msgDecoder.h:
 
@@ -187,3 +188,5 @@ D:/STM/MIDIControl/Inc/oled.h:
 D:/STM/MIDIControl/Inc/usart.h:
 
 D:/STM/MIDIControl/Inc/devStatus.h:
+
+D:/STM/MIDIControl/Inc/rtc.h:

@@ -27,7 +27,7 @@ void strToSongMenu(char * str, uint8_t * size){
 	splitString(str, "\n", songs);
 
 	//Projde je a pro kazdou vytvori zaznam v menu
-	for(int i = 0; i <= items; i++){
+	for(int i = 0; i < items; i++){
 			songMenu[i].name = songs[i];
 			songMenu[i].font = &Font_11x18;
 			songMenu[i].selected = 0;
@@ -39,14 +39,14 @@ void strToSongMenu(char * str, uint8_t * size){
 		}
 
 	//Vytvori tlacitko zpet
-	songMenu[items+1].font = &Font_11x18;
-	songMenu[items+1].name = "Zpet";
-	songMenu[items+1].selected = 0;
-	songMenu[items+1].hasSpecialSelector = 1;
-	songMenu[items+1].specharNotSelected = 36;
-	songMenu[items+1].specharSelected = 37;
-	songMenu[items+1].submenuLevel = 3;
-	songMenu[items+1].parentItem = 0;
+	songMenu[items].font = &Font_11x18;
+	songMenu[items].name = "Zpet";
+	songMenu[items].selected = 0;
+	songMenu[items].hasSpecialSelector = 1;
+	songMenu[items].specharNotSelected = 36;
+	songMenu[items].specharSelected = 37;
+	songMenu[items].submenuLevel = 3;
+	songMenu[items].parentItem = 0;
 
 }
 
@@ -198,28 +198,26 @@ void midiControl_stop(uint8_t initiator){
 
 
 //Rutina pro kontrolu pripojeni PC a ovladace a odesilani info o "zijici" hlavni jednotce
-midiControl_keepalive_process(){
+void midiControl_keepalive_process(){
 	//Pricita citace - jak dlouho nedostal odpoved
 	alivePCCounter++;
 	aliveRemoteCounter++;
 
-	//Pokud nedostal odpoved za 2s, neni PC pripojeno
-	if(alivePCCounter > 4){
+	//Pokud nedostal odpoved za 3s, neni PC pripojeno
+	if(alivePCCounter > 6){
 		alivePC = 0;
 		alivePCCounter = 0;
 	}
 
-	//Pokud nedostal odpoved za 2s, neni ovladac pripojen
-	if(aliveRemoteCounter > 4){
+	//Pokud nedostal odpoved za 3s, neni ovladac pripojen
+	if(aliveRemoteCounter > 6){
 		aliveRemote = 0;
 		aliveRemoteCounter = 0;
 	}
 
-	//Odesle informaci o svoji pritonosti
-	char msg[] = {0x00, 0xAB};
-	sendMsg(ADDRESS_MAIN, ADDRESS_PC, 1, INTERNAL, msg, 2);
-
 }
+
+
 
 //Rutina pro nastaveni dat zobrazenych na displeji
 uint8_t midiControl_setDisplay(uint16_t cislo_pisne, uint8_t cislo_sloky, uint8_t barva, uint8_t napev){
@@ -248,4 +246,10 @@ uint8_t midiControl_setDisplay(uint16_t cislo_pisne, uint8_t cislo_sloky, uint8_
 
 uint8_t midiControl_setDisplayRaw(uint8_t * data, uint16_t len){
 	HAL_UART_Transmit_IT(&huart1, data, len);
+}
+
+void midiControl_get_time(){
+	//Odesle zadost o nastaveni casu
+	char msg[] = {INTERNAL_COM, INTERNAL_COM_GET_TIME};
+	sendMsg(ADDRESS_MAIN, ADDRESS_PC, 0, INTERNAL, msg, 2);
 }

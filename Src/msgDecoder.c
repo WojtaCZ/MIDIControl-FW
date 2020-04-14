@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "devStatus.h"
 #include "midiControl.h"
+#include <stm32g4xx_hal_rtc.h>
+#include <rtc.h>
 
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
@@ -30,11 +32,35 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 			}else if(msg[8] == INTERNAL_COM_KEEPALIVE){
 				if(src == ADDRESS_CONTROLLER){
 					aliveRemote = 1;
+					btStreamOpen = 1;
+					btStreamSecured = 1;
+					btStreamBonded = 1;
 					aliveRemoteCounter = 0;
 				}else if(src == ADDRESS_PC){
 					alivePC = 1;
 					alivePCCounter = 0;
 				}
+			}else if(msg[8] == INTERNAL_COM_SET_TIME){
+				RTC_TimeTypeDef time;
+				RTC_DateTypeDef date;
+
+				time.Seconds = msg[9];
+				time.Minutes = msg[10];
+				time.Hours = msg[11];
+				time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+				time.SecondFraction = 0;
+				time.SubSeconds = 0;
+				time.TimeFormat = RTC_HOURFORMAT_24;
+				time.StoreOperation = RTC_STOREOPERATION_RESET;
+
+				date.WeekDay = RTC_WEEKDAY_MONDAY;
+				date.Date = msg[12];
+				date.Month = msg[13];
+				date.Year = msg[14];
+
+				HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
+				HAL_RTC_SetDate(&hrtc, &date, RTC_FORMAT_BIN);
+
 			}else msgERR(0, msgType, len);
 		}else if(msg[7] == INTERNAL_CURR){
 			if(msg[8] == INTERNAL_CURR_ON){

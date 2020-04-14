@@ -176,7 +176,7 @@ void oled_menuOnclick(int menupos){
 			case 0:
 				sprintf(workerBtConnectMAC, "%02X%02X%02X%02X%02X%02X", btBonded[btSelectedController].mac[0], btBonded[btSelectedController].mac[1], btBonded[btSelectedController].mac[2], btBonded[btSelectedController].mac[3], btBonded[btSelectedController].mac[4], btBonded[btSelectedController].mac[5]);
 
-				//Odstrani ovladac
+				//Pokusi se pripojit
 				workerAssert(&workerBtConnect);
 			break;
 
@@ -230,6 +230,7 @@ void oled_begin(){
 	encoderDirSwap = 0;
 	//Zapnou se casovace pro obnovu OLED a scrollovani
 	HAL_TIM_Base_Start_IT(&htim2);
+	//Zapne se timer crollovani
 	HAL_TIM_Base_Start_IT(&htim4);
 	oledHeader = (char*)malloc(50);
 }
@@ -239,6 +240,7 @@ void oled_begin(){
 void oled_refresh(){
 	//Vyplni se cernou
 	ssd1306_Fill(0);
+
 	if(oledType == OLED_MENU){
 		//Pokud se ma zobrazovat menu, vykresli se
 		oled_drawMenu();
@@ -284,7 +286,8 @@ void oled_drawMenu(){
 	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
 	//Vypise se hlavicka
-	sprintf(oledHeader, "%d.%d %d:%d",date.Date, date.Month, time.Hours, time.Minutes);
+	sprintf(oledHeader, "%d %d %d %d", alivePC, aliveRemote, btCmdMode, btStreamOpen);
+	//sprintf(oledHeader, "%d.%d %d:%d  %d %d",date.Date, date.Month, time.Hours, time.Minutes, alivePC, aliveRemote);
 	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
@@ -412,14 +415,14 @@ void oled_refreshResume(){
 //Funkce vykreslujici zapinaci obrazovku
 void oled_StartSplash(){
 	//Vypisou se texty
-	ssd1306_SetCursor(3, 10);
+	ssd1306_SetCursor((128-(strlen("MIDIControl"))*11)/2,10);
 	ssd1306_WriteString("MIDIControl", Font_11x18, White);
 
-	ssd1306_SetCursor(42,30);
+	ssd1306_SetCursor((128-(strlen("BASE"))*11)/2,30);
 	ssd1306_WriteString("BASE", Font_11x18, White);
 
 	char * version = "Verze 1.1";
-	ssd1306_SetCursor((128-(strlen(version)-1)*7)/2,50);
+	ssd1306_SetCursor((128-(strlen(version))*7)/2,50);
 	ssd1306_WriteString(version, Font_7x10, White);
 
 	//Vyporada se s kliknutim tlacitka
@@ -429,15 +432,15 @@ void oled_StartSplash(){
 //Funkce pro vykresleni libovolneho textu s nacitacimi puntiky
 void oled_LoadingSplash(char * msg){
 	//Vypise se text
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 15);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 15);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	//Vykresli se puntiky
-	ssd1306_SetCursor(42,35);
+	ssd1306_SetCursor(36,35);
 	ssd1306_WriteChar(33 - (loadingStat & 0x01), Icon_11x18, White);
-	ssd1306_SetCursor(64,35);
+	ssd1306_SetCursor(58,35);
 	ssd1306_WriteChar(33 - ((loadingStat>>1) & 0x01), Icon_11x18, White);
-	ssd1306_SetCursor(86,35);
+	ssd1306_SetCursor(80,35);
 	ssd1306_WriteChar(33 - ((loadingStat>>2) & 0x01), Icon_11x18, White);
 	encoderclick = 0;
 
@@ -445,10 +448,10 @@ void oled_LoadingSplash(char * msg){
 
 //Funkce pro vypsani chyby
 void oled_ErrorSplash(char * msg){
-	ssd1306_SetCursor((128-(strlen("Chyba!")-1)*11)/2, 15);
+	ssd1306_SetCursor((128-(strlen("Chyba!"))*11)/2, 15);
 	ssd1306_WriteString("Chyba!", Font_11x18, White);
 
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 15);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 15);
 	ssd1306_WriteString(msg, Font_7x10, White);
 
 	encoderclick = 0;
@@ -459,18 +462,18 @@ void oled_ErrorSplash(char * msg){
 void oled_UsbWaitingSplash(){
 	//Vykresli se texty
 	char * msg = "Cekam na";
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 1);
 	ssd1306_WriteString(msg, Font_11x18, White);
 	msg = "aplikaci";
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 23);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 23);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	//VYkresli se puntiky
-	ssd1306_SetCursor(42,50);
+	ssd1306_SetCursor(36,45);
 	ssd1306_WriteChar(33 - (loadingStat & 0x01), Icon_11x18, White);
-	ssd1306_SetCursor(64,50);
+	ssd1306_SetCursor(58,45);
 	ssd1306_WriteChar(33 - ((loadingStat>>1) & 0x01), Icon_11x18, White);
-	ssd1306_SetCursor(86,50);
+	ssd1306_SetCursor(80,45);
 	ssd1306_WriteChar(33 - ((loadingStat>>2) & 0x01), Icon_11x18, White);
 	encoderclick = 0;
 }
@@ -478,12 +481,11 @@ void oled_UsbWaitingSplash(){
 //Funkce vykreslujici "Zadne vysledky"
 void oled_NothingFound(){
 	char * msg = "Zadne";
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 1);
 	ssd1306_WriteString(msg, Font_11x18, White);
 	msg = "vysledky";
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 23);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 23);
 	ssd1306_WriteString(msg, Font_11x18, White);
-
 	if(encoderclick){
 		oledType = OLED_MENU;
 		encoderclick = 0;
@@ -503,19 +505,19 @@ void oled_BtDevInfoSplash(struct btDevice * dev){
 		memset(tmp+9, 0, strlen(dev->name)-9);
 		ssd1306_WriteString(tmp, Font_11x18, White);
 	}else{
-		ssd1306_SetCursor((128-(strlen(dev->name)-1)*9)/2, 1);
+		ssd1306_SetCursor((128-(strlen(dev->name))*9)/2, 1);
 		ssd1306_WriteString(dev->name, Font_11x18, White);
 	}
 
 	//Vypisou se udaje
 	char msg[25];
 	sprintf(msg, "%02X-%02X-%02X-%02X-%02X-%02X", dev->mac[0], dev->mac[1], dev->mac[2], dev->mac[3], dev->mac[4], dev->mac[5]);
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 30);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 30);
 	ssd1306_WriteString(msg, Font_7x10, White);
 
 	//Vypise se RSSI
 	sprintf(msg, "RSSI: %ddB", dev->rssi);
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 43);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 43);
 	ssd1306_WriteString(msg, Font_7x10, White);
 
 
@@ -542,7 +544,7 @@ void oled_BtDevPairAckSplash(struct btDevice * dev){
 		memset(tmp+9, 0, strlen(dev->name)-9);
 		ssd1306_WriteString(tmp, Font_11x18, White);
 	}else{
-		ssd1306_SetCursor((128-(strlen(dev->name)-1)*9)/2, 1);
+		ssd1306_SetCursor((128-(strlen(dev->name))*9)/2, 1);
 		ssd1306_WriteString(dev->name, Font_11x18, White);
 	}
 
@@ -598,7 +600,7 @@ void oled_BtDevPairAckSplash(struct btDevice * dev){
 		if(encoderpos == 0){
 			//Klikne na ano - pokusi se parovat
 			sprintf(workerBtConnectMAC, "%02X%02X%02X%02X%02X%02X", btBondable[btSelectedBondDevice].mac[0], btBondable[btSelectedBondDevice].mac[1], btBondable[btSelectedBondDevice].mac[2], btBondable[btSelectedBondDevice].mac[3], btBondable[btSelectedBondDevice].mac[4], btBondable[btSelectedBondDevice].mac[5]);
-
+			btPairing = 1;
 			workerAssert(&workerBtConnect);
 			oled_setDisplayedSplash(oled_LoadingSplash, "Paruji");
 		}else{
@@ -623,7 +625,7 @@ void oled_BtDevPairRequestSplash(struct btDevice * dev){
 		memset(tmp+9, 0, strlen(dev->name)-9);
 		ssd1306_WriteString(tmp, Font_11x18, White);
 	}else{
-		ssd1306_SetCursor((128-(strlen(dev->name)-1)*9)/2, 1);
+		ssd1306_SetCursor((128-(strlen(dev->name))*9)/2, 1);
 		ssd1306_WriteString(dev->name, Font_11x18, White);
 	}
 
@@ -632,12 +634,12 @@ void oled_BtDevPairRequestSplash(struct btDevice * dev){
 	char msg[25];
 
 	sprintf(msg, "Zada parovani");
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 25);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 25);
 	ssd1306_WriteString(msg, Font_7x10, White);
 
 	//Vypise se PIN kod
 	sprintf(msg, "PIN %06ld", dev->pin);
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 41);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 41);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	//Po kliknuti skoci do menu
@@ -651,11 +653,11 @@ void oled_BtDevPairRequestSplash(struct btDevice * dev){
 void oled_BtDevPairCompleteSplash(char * msg){
 
 	//Vypise se hlaska
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 25);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 25);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	char * msg2 = "Parovani";
-	ssd1306_SetCursor((128-(strlen(msg2)-1)*11)/2, 1);
+	ssd1306_SetCursor((128-(strlen(msg2))*11)/2, 1);
 	ssd1306_WriteString(msg2, Font_11x18, White);
 
 	//Pri kliknuti skoci zpet do menu
@@ -673,7 +675,7 @@ void oled_playingSplash(char * songname){
 	char msg[25];
 
 	sprintf(msg, "Prehravam");
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 1);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	//Vypise nazev pisne
@@ -685,7 +687,7 @@ void oled_playingSplash(char * songname){
 			memset(tmp+9, 0, strlen(songname)-9);
 			ssd1306_WriteString(tmp, Font_11x18, White);
 		}else{
-			ssd1306_SetCursor((128-(strlen(songname)-1)*9)/2, 25);
+			ssd1306_SetCursor((128-(strlen(songname))*9)/2, 25);
 			ssd1306_WriteString(songname, Font_11x18, White);
 		}
 
@@ -698,7 +700,7 @@ void oled_playingSplash(char * songname){
 
 	//Vypise "Zastavit"
 	sprintf(msg, "Zastavit");
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 53);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 53);
 	ssd1306_WriteString(msg, Font_7x10, Black);
 
 	//Blika se LED
@@ -730,7 +732,7 @@ void oled_recordingSplash(char * songname){
 	char msg[25];
 
 	sprintf(msg, "Nahravam");
-	ssd1306_SetCursor((128-(strlen(msg)-1)*11)/2, 1);
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 1);
 	ssd1306_WriteString(msg, Font_11x18, White);
 
 	//Vypise nazev pisne
@@ -742,7 +744,7 @@ void oled_recordingSplash(char * songname){
 			memset(tmp+9, 0, strlen(songname)-9);
 			ssd1306_WriteString(tmp, Font_11x18, White);
 		}else{
-			ssd1306_SetCursor((128-(strlen(songname)-1)*9)/2, 25);
+			ssd1306_SetCursor((128-(strlen(songname))*9)/2, 25);
 			ssd1306_WriteString(songname, Font_11x18, White);
 		}
 
@@ -755,7 +757,7 @@ void oled_recordingSplash(char * songname){
 
 	//Vypise "Zastavit"
 	sprintf(msg, "Zastavit");
-	ssd1306_SetCursor((128-(strlen(msg)-1)*7)/2, 53);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 53);
 	ssd1306_WriteString(msg, Font_7x10, Black);
 
 	//Blika se LED

@@ -16,7 +16,7 @@ extern struct menuitem bluetoothmenu[];
 
 uint16_t btFifoIndex, btMsgFifoIndex, btComMessageStartIndex, btMessageLen, btStatusMsgWD;
 uint8_t btFifo[500], btFifoByte, btMsgFifo[500];
-uint8_t btScannedCount, btBondedCount, btBondableCount, btCmdMode, btStatusMsg, btStreamOpen, btStreamSecured, btStreamBonded, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag, btSelectedController, btSelectedBondDevice;
+uint8_t btScannedCount, btBondedCount, btBondableCount, btCmdMode, btStatusMsg, btStreamOpen, btStreamSecured, btStreamBonded, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag, btSelectedController, btSelectedBondDevice, btPairing;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();

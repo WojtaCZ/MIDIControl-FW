@@ -138,17 +138,7 @@ int main(void)
 
   setStatusAll(0, DEV_LOAD);
 
-  //oled_setDisplayedSplash(oled_LoadingSplash, "Skenuji");
-
-  //oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
-
   oled_begin();
-
-
-
-
-  //oled_setDisplayedSplash(oled_StartSplash);
-  //oled_StartSplash();
 
   if(bluetoothInit()){
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
@@ -164,21 +154,28 @@ int main(void)
 
   midiControl_midiIO_getState();
 
- /* if(!usbStatus){
+
+  /*if(!alivePC){
 	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
-	  while(!usbStatus);
+	  while(!alivePC){
+		  if(btMsgReceivedFlag){
+			  decodeMessage(uartMsgDecodeBuff, btMessageLen+6, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+			  btMsgReceivedFlag = 0;
+		  }
+	  }
   }*/
+
+
+  //Ziska se aktualni cas
+  midiControl_get_time();
+
 
   //Skoci do menu
   oledType = OLED_MENU;
 
   HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+  HAL_UART_Re
 
-
-
-
-
-  //HAL_UART_Transmit_IT(&huart2, "$$$", 3);
 
 
   /* USER CODE END 2 */
@@ -211,7 +208,7 @@ int main(void)
 	  if(workerBtRemoveController.assert){
 	  		if(!btCmdMode) bluetoothEnterCMD();
 	  		char cmd[10];
-	  		sprintf(cmd,"U,%d", (btSelectedController+1));
+	  		sprintf(cmd,"U,%d\r", (btSelectedController+1));
 	  		bluetoothCMD_ACK(cmd, BT_AOK);
 	  		if(btCmdMode) bluetoothLeaveCMD();
 	  		workerBtRemoveController.assert = 0;
@@ -219,7 +216,7 @@ int main(void)
 
 	  if(workerBtConnect.assert){
 		  bluetoothConnect(workerBtConnectMAC);
-
+		  //workerAssert(&workerBtBond);
 		  workerBtConnect.assert = 0;
 	  }
 
@@ -244,6 +241,19 @@ int main(void)
 			  oled_setDisplayedSplash(oled_ErrorSplash, "pri nacitani pisni");
 			  workerGetSongs.assert = 0;
 		  }
+	  }
+
+	  if(workerMiscellaneous.assert){
+		  //Kontroluje statusy periferii
+		  midiControl_display_getState();
+
+		  midiControl_midiIO_getState();
+
+		 //Odesle informaci o svoji pritonosti
+		 char msg[] = {INTERNAL_COM, INTERNAL_COM_KEEPALIVE};
+		 sendMsg(ADDRESS_MAIN, ADDRESS_OTHER, 1, INTERNAL, msg, 2);
+
+		 workerDesert(&workerMiscellaneous);
 	  }
 
 	/*  if(!alivePC){
@@ -403,13 +413,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 
 	if(htim->Instance == TIM4){
-		//Kontroluje statusy periferii
-		midiControl_display_getState();
-
-		midiControl_midiIO_getState();
-
 
 		midiControl_keepalive_process();
+
+		if(loadingStat > 4){
+			workerAssert(&workerMiscellaneous);
+		}
 
 		//Tady se dela scrollovani
 		if(scrollPauseDone){
@@ -520,6 +529,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}else if(huart->Instance == USART1){
 		setStatus(DEV_DISP, DEV_DATA);
 		//Ukazatel
+
+
+
+
 	}else if(huart->Instance == USART2){
 		setStatus(DEV_BLUETOOTH, DEV_DATA);
 

@@ -24,6 +24,8 @@ uint8_t bluetoothInit(){
 	btMessageLen = 0;
 	btMsgReceivedFlag = 0;
 	btSelectedController = 0;
+	btPairing = 0;
+	workerBtConnectMAC = (char *) malloc(50);
 
 	//Zecne se prijem
 	HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
@@ -37,11 +39,13 @@ uint8_t bluetoothInit(){
 	HAL_Delay(100);
 
 	//Zapne se CMD mod
+	btCmdMode = 0;
 	if(!bluetoothEnterCMD()) return 0;
 
+
 	//Nastavi se dev info a UART
-	if(!bluetoothCMD_ACK("GS\r", "C0")){
-		if(!bluetoothCMD_ACK("SS,C0\r", BT_AOK)) return 0;
+	if(!bluetoothCMD_ACK("GS\r", "E0")){
+		if(!bluetoothCMD_ACK("SS,E0\r", BT_AOK)) return 0;
 		if(!bluetoothCMD_ACK("R,1\r", "REBOOT")) return 0;
 	}
 
@@ -61,11 +65,10 @@ uint8_t bluetoothInit(){
 	if(!bluetoothCMD_ACK("SDN,Vojtech Vosahlo\r", BT_AOK)) return 0;
 
 	//Automaticky potvrdi pin
-	if(!bluetoothCMD_ACK("SA,4\r", BT_AOK)) return 0;
+	if(!bluetoothCMD_ACK("SA,5\r", BT_AOK)) return 0;
 
 	//Vypne CMD
 	if(!bluetoothLeaveCMD()) return 0;
-
 
 	return 1;
 }
@@ -77,16 +80,21 @@ uint8_t bluetoothDecodeMsg(){
 
 	//Pokud obsahuje retezec, vykona se
 	if(strstr((char *)btMsgFifo, "%BONDED") != 0){
-		btStreamOpen = 1;
+		//btStreamOpen = 1;
 		btStreamBonded = 1;
+		//btCmdMode = 0;
 	}
 
 	//Pokud obsahuje retezec, vykona se
 	if(strstr((char *)btMsgFifo, "%CONNECT") != 0){
+		//if(btPairing) workerAssert(&workerBtBond);
+
 		//Zobrazi obrazovku zadosti o parovani
 		index = strstr((char *)btMsgFifo, "%CONNECT");
 		sscanf((char *)index+9, "%*d,%02X%02X%02X%02X%02X%02X", &btPairReq.mac[0], &btPairReq.mac[1], &btPairReq.mac[2], &btPairReq.mac[3], &btPairReq.mac[4], &btPairReq.mac[5]);
 		sprintf(btPairReq.name, "%02X-%02X-%02X-%02X-%02X-%02X", btPairReq.mac[0], btPairReq.mac[1], btPairReq.mac[2], btPairReq.mac[3], btPairReq.mac[4], btPairReq.mac[5]);
+
+		//btCmdMode = 0;
 	}
 
 	//Pokud obsahuje retezec, vykona se
@@ -96,6 +104,7 @@ uint8_t bluetoothDecodeMsg(){
 		btStreamOpen = 0;
 		btStreamSecured = 0;
 		btStreamBonded = 0;
+		//btCmdMode = 0;
 	}
 
 	//Pokud obsahuje retezec, vykona se
@@ -109,6 +118,7 @@ uint8_t bluetoothDecodeMsg(){
 	//Pokud obsahuje retezec, vykona se
 	if(strstr((char *)btMsgFifo, "%STREAM_OPEN") != 0){
 		btStreamOpen = 1;
+		btCmdMode = 0;
 	}
 
 	//Pokud obsahuje retezec, vykona se
@@ -121,8 +131,8 @@ uint8_t bluetoothDecodeMsg(){
 		//Nastane pri pripojeni nesparovaneho zarizeni
 		btStreamOpen = 1;
 		btStreamSecured = 1;
+		//btCmdMode = 0;
 		//Pokusi se sparovat
-		//workerAssert(&workerBtBond);
 	}
 
 	//Vycisti se buffer
@@ -153,14 +163,16 @@ void bluetoothMsgFifoFlush(){
 
 //Zapnuti CMD modu modulu
 uint8_t bluetoothEnterCMD(){
-	if(!bluetoothCMD_ACK("$$$", "CMD>")) return 0;
+	if(btCmdMode) return 1;
+	if(!bluetoothCMD_ACK("$$$", BT_CMD));
 	btCmdMode = 1;
 	return 1;
 }
 
 //Vypnuti CMD modu modulu
 uint8_t bluetoothLeaveCMD(){
-	if(!bluetoothCMD_ACK("---\r", BT_END)) return 0;
+	if(!btCmdMode) return 1;
+	if(!bluetoothCMD_ACK("---\r", BT_END));
 	btCmdMode = 0;
 	return 1;
 }
@@ -280,7 +292,7 @@ uint8_t bluetoothConnectKnown(){
 	if(selected != -1){
 		//Okopiruje se MAC adresa
 		char * mac = (char*) malloc(20);
-		sprintf(mac, "%02X%02X%02X%02X%02X%02X", btBonded[match].mac[0], btBonded[match].mac[1], btBonded[match].mac[2], btBonded[match].mac[3], btBonded[match].mac[4], btBonded[match].mac[5]);
+		sprintf(mac, "%02X%02X%02X%02X%02X%02X", btBonded[selected].mac[0], btBonded[selected].mac[1], btBonded[selected].mac[2], btBonded[selected].mac[3], btBonded[selected].mac[4], btBonded[selected].mac[5]);
 		sprintf(oledHeader, "%s" ,mac);
 		//Pokusi se pripojit k MAC
 		if(!bluetoothConnect(mac)) return 0;
@@ -539,7 +551,7 @@ uint8_t bluetoothConnect(char * mac){
 	char * cmd = (char *) malloc(50);
 	//Vysle prikaz pro pripojeni
 	sprintf(cmd, "C,0,%s\r", mac);
-	sprintf(oledHeader, "%s" ,cmd);
+	//sprintf(oledHeader, "%s" ,cmd);
 	//Pokud se pripojeni nepovedlo, vrati 0
 	if(!bluetoothCMD_ACK(cmd, "%STREAM_OPEN")){
 		//Odejde z CMD modu
@@ -548,7 +560,7 @@ uint8_t bluetoothConnect(char * mac){
 	}else btStreamOpen = 1;
 
 	//Odejde z CMD modu
-	bluetoothLeaveCMD();
+	//bluetoothLeaveCMD();
 
 	return 1;
 }
@@ -566,7 +578,7 @@ uint8_t bluetoothBond(){
 	}else btStreamOpen = 1;
 
 	//Odejde z CMD modu
-	bluetoothLeaveCMD();
+	//bluetoothLeaveCMD();
 
 	return 1;
 }

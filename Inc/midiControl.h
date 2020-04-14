@@ -17,6 +17,8 @@ uint8_t dispStatus, currentStatus, midiStatus, usbStatus;
 
 uint8_t alivePC, aliveRemote, alivePCCounter, aliveRemoteCounter;
 
+uint8_t dispData[9];
+
 //Pomocne promenne pro statusy
 uint8_t midiStatusOld;
 
@@ -37,7 +39,7 @@ struct worker{
 
 
 //Flagy pro "workery"
-struct worker workerBtScanDev, workerBtBondDev, workerBtConnect, workerBtBond, workerBtScanBondable, workerBtRemoveController, workerGetSongs;
+struct worker workerBtScanDev, workerBtBondDev, workerBtConnect, workerBtBond, workerBtScanBondable, workerBtRemoveController, workerGetSongs, workerMiscellaneous;
 char * workerBtConnectMAC;
 
 
@@ -56,6 +58,7 @@ void midiControl_play(uint8_t initiator, char * songname);
 void midiControl_keepalive_process();
 uint8_t midiControl_setDisplay(uint16_t cislo_pisne, uint8_t cislo_sloky, uint8_t barva, uint8_t napev);
 uint8_t midiControl_setDisplayRaw(uint8_t * data, uint16_t len);
+void midiControl_get_time();
 
 void strToSongMenu(char * str, uint8_t * size);
 
