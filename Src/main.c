@@ -142,8 +142,10 @@ int main(void)
 
   if(bluetoothInit()){
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
+	  bluetoothStatus = BT_STATUS_OK;
   }else{
 	  setStatus(DEV_BLUETOOTH, DEV_ERR);
+	  bluetoothStatus = BT_STATUS_ERR;
   }
 
   //Prohleda zarizeni v okoli a pripoji se ke znamemu ovladaci
@@ -174,7 +176,7 @@ int main(void)
   oledType = OLED_MENU;
 
   HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
-  HAL_UART_Re
+  HAL_UART_Receive_DMA(&huart1, dispData, 9);
 
 
 
@@ -244,17 +246,68 @@ int main(void)
 	  }
 
 	  if(workerMiscellaneous.assert){
-		  //Kontroluje statusy periferii
-		  midiControl_display_getState();
+		   //Kontroluje statusy periferii
+		   midiControl_display_getState();
 
-		  midiControl_midiIO_getState();
+		   midiControl_midiIO_getState();
 
-		 //Odesle informaci o svoji pritonosti
-		 char msg[] = {INTERNAL_COM, INTERNAL_COM_KEEPALIVE};
-		 sendMsg(ADDRESS_MAIN, ADDRESS_OTHER, 1, INTERNAL, msg, 2);
+		  //Odesle informaci o svoji pritonosti
+		  char msg[] = {INTERNAL_COM, INTERNAL_COM_KEEPALIVE};
+		  sendMsg(ADDRESS_MAIN, ADDRESS_OTHER, 1, INTERNAL, msg, 2);
 
-		 workerDesert(&workerMiscellaneous);
+		  workerDesert(&workerMiscellaneous);
 	  }
+
+	  if(workerDispRefresh.assert){
+		  char buff[20];
+		  uint8_t changed = 0;
+
+		  //Pokud se lisi nastavene a existujici cislo pisne
+		  sprintf(buff, "%c%c%c%c", dispSong[3], dispSong[2], dispSong[1], dispSong[0]);
+		  if(strcmp(numDispSong.enteredValue,buff)){
+			  dispSong[3] = numDispSong.enteredValue[0];
+			  dispSong[2] = numDispSong.enteredValue[1];
+			  dispSong[1] = numDispSong.enteredValue[2];
+			  dispSong[0] = numDispSong.enteredValue[3];
+			  changed = 1;
+		  }
+
+		  //Pokud se lisi nastavene a existujici cislo sloky
+		  sprintf(buff, "%c%c%", dispVerse[1], dispVerse[0]);
+		  if(strcmp(numDispSong.enteredValue,buff)){
+			  dispVerse[1] = numDispVerse.enteredValue[0];
+			  dispVerse[0] = numDispVerse.enteredValue[1];
+		  	  changed = 1;
+		  }
+
+		  //Pokud se lisi nastavene a existujici pismeno
+		  if(numDispLetter.enteredValue[0] != dispLetter){
+			  dispLetter = numDispLetter.enteredValue[0];
+			  changed = 1;
+		  }
+
+		  if(dispLED != dispLEDOld){
+			  changed = 1;
+		  }
+
+		  if(changed){
+			  uint8_t data[9];
+			  data[0] = 0xB0;
+			  data[1] =  (dispVerse[0] <= '9' && dispVerse[0] >= '0') ? dispVerse[0]-48 : 0xE0;
+			  data[2] =  (dispVerse[1] <= '9' && dispVerse[1] >= '0') ? dispVerse[1]-48 : 0xE0;
+			  data[3] =  (dispSong[0] <= '9' && dispSong[0] >= '0') ? dispSong[0]-48 : 0xE0;
+			  data[4] =  (dispSong[1] <= '9' && dispSong[1] >= '0') ? dispSong[1]-48 : 0xE0;
+			  data[5] =  (dispSong[2] <= '9' && dispSong[2] >= '0') ? dispSong[2]-48 : 0xE0;
+			  data[6] =  (dispSong[3] <= '9' && dispSong[3] >= '0') ? dispSong[3]-48 : 0xE0;
+			  data[7] =  (dispLetter <= 'D' && dispLetter >= 'A') ? dispLetter-55 : 0xE0;
+			  data[8] =	 (dispLED <= 3 && dispLetter >= 0) ? 0x20 | dispLED : 0xE0;
+			  midiControl_setDisplayRaw(data, 9);
+			  changed = 0;
+		  }
+
+		  workerDesert(&workerDispRefresh);
+	  }
+
 
 	/*  if(!alivePC){
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
@@ -530,7 +583,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		setStatus(DEV_DISP, DEV_DATA);
 		//Ukazatel
 
+		midiControl_refreshDisplayData();
 
+		HAL_UART_Receive_DMA(&huart1, dispData, 9);
 
 
 	}else if(huart->Instance == USART2){
@@ -580,6 +635,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart->Instance == USART1){
 		setStatus(DEV_DISP, DEV_DATA);
+		HAL_UART_Receive_DMA(&huart1, dispData, 9);
 		//Ukazatel
 	}else if(huart->Instance == USART2){
 		setStatus(DEV_BLUETOOTH, DEV_DATA);

@@ -42,6 +42,29 @@ void setStatus(uint8_t perif, uint8_t status){
 	}
 }
 
+
+//Nastaveni barvy LED podle statusu
+void setColor(uint8_t perif, uint32_t color){
+
+	statuses[perif] = color;
+	setLEDcolor((perif >> 7) & 0x01, perif & 0x7f, ((pendingFlags[perif]>>16) & 0xff), ((pendingFlags[perif]>>8) & 0xff), (pendingFlags[perif] & 0xff));
+}
+
+
+//Rutina pro nastaveni barvy vsech LED najednou
+void setColorAll(uint8_t strip, uint32_t color){
+
+	//Rozdeli se na dva "pasky" podle nazvu
+	for(uint16_t i = 0; i < PERIF_COUNT; i++){
+		if(((i & 0x80)>>7) == strip) statuses[i] = color;
+	}
+
+	//Nastavi se barva
+	setWHOLEcolor(strip, ((color>>16) & 0xff), ((color>>8) & 0xff), (color & 0xff));
+
+}
+
+
 //Rutina pro nastaveni barvy vsech LED najednou
 void setStatusAll(uint8_t strip, uint8_t status){
 	uint32_t color;

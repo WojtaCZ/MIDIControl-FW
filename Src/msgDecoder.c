@@ -63,19 +63,72 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 
 			}else msgERR(0, msgType, len);
 		}else if(msg[7] == INTERNAL_CURR){
-			if(msg[8] == INTERNAL_CURR_ON){
-				midiControl_current_On();
+			if(msg[8] == INTERNAL_CURR_SET_STATUS){
+				if(msg[9]){
+					midiControl_current_On();
+				}else{
+					midiControl_current_Off();
+				}
+
 				msgAOK(0, msgType, len, 0, NULL);
-			}else if(msg[8] == INTERNAL_CURR_OFF){
-				midiControl_current_Off();
-				msgAOK(0, msgType, len, 0, NULL);
+			}else if(msg[8] == INTERNAL_CURR_GET_STATUS){
+				uint8_t currentStatus = HAL_GPIO_ReadPin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
+				msgAOK(0, msgType, len, 1, (char*)&currentStatus);
+			}else msgERR(0, msgType, len);
+
+		}else if(msg[7] == INTERNAL_MIDI){
+			if(msg[8] == INTERNAL_MIDI_GET_STATUS){
+				msgAOK(0, msgType, len, 1, (char*)&midiStatus);
+			}else if(msg[8] == INTERNAL_CURR_GET_STATUS){
+				uint8_t currentStatus = HAL_GPIO_ReadPin(CURRENT_SOURCE_GPIO_Port, CURRENT_SOURCE_Pin);
+				msgAOK(0, msgType, len, 1, (char*)&currentStatus);
+			}else msgERR(0, msgType, len);
+
+		}else if(msg[7] == INTERNAL_BT){
+			if(msg[8] == INTERNAL_BT_GET_STATUS){
+				uint8_t stat = (btStreamOpen << 1) | bluetoothStatus;
+				msgAOK(0, msgType, len, 1, (char*)&stat);
 			}else msgERR(0, msgType, len);
 
 		}else if(msg[7] == INTERNAL_DISP){
+			if(msg[8] == INTERNAL_DISP_SET_SONG){
+				numDispSong.enteredValue[0] = msg[9];
+				numDispSong.enteredValue[1] = msg[10];
+				numDispSong.enteredValue[2] = msg[11];
+				numDispSong.enteredValue[3] = msg[12];
+				workerAssert(&workerDispRefresh);
+				msgAOK(0, msgType, len, 0, NULL);
+			}else if(msg[8] == INTERNAL_DISP_SET_VERSE){
+				numDispVerse.enteredValue[0] = msg[9];
+				numDispVerse.enteredValue[1] = msg[10];
+				workerAssert(&workerDispRefresh);
+				msgAOK(0, msgType, len, 0, NULL);
+			}else if(msg[8] == INTERNAL_DISP_SET_LETTER){
+				numDispLetter.enteredValue[0] = msg[9];
+				workerAssert(&workerDispRefresh);
+				msgAOK(0, msgType, len, 0, NULL);
+			}else if(msg[8] == INTERNAL_DISP_SET_LED){
+				dispLED = msg[9];
+				workerAssert(&workerDispRefresh);
+				msgAOK(0, msgType, len, 0, NULL);
+			}else if(msg[8] == INTERNAL_DISP_GET_STATUS){
+				char msg[] = {dispConnected, dispSong[3], dispSong[2], dispSong[1], dispSong[0], dispVerse[1], dispVerse[0], dispLetter, (dispLED > 3) ? 0xe0 : dispLED};
+				msgAOK(0, msgType, len, 9, msg);
+			}else msgERR(0, msgType, len);
+		}else if(msg[7] == INTERNAL_USB){
+			if(msg[8] == INTERNAL_USB_GET_CONNECTED){
+				msgAOK(0, msgType, len, 1, (char*)&usbStatus);
+			}else msgERR(0, msgType, len);
 
 		}else msgERR(0, msgType, len);
 	}else if(type == EXTERNAL_DISP){
 		midiControl_setDisplayRaw((uint8_t*)&msg[7], len-7);
+	}else if(type == EXTERNAL_BT){
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*)&msg[7], len-7);
+	}else if(type == EXTERNAL_MIDI){
+		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&msg[7], len-7);
+	}else if(type == EXTERNAL_USB){
+		CDC_Transmit_FS((uint8_t*)&msg[7], len-7);
 	}else if(type == AOKERR){
 		if((msg[7] & 0x80) == AOK){
 
@@ -106,7 +159,7 @@ void msgAOK(uint8_t aokType, uint8_t recType, uint16_t recSize, uint16_t dataSiz
 	buffer[2] = ((recSize-6) & 0xff00) >> 8;
 	buffer[3] = (recSize-6) & 0xff;
 	memcpy(&buffer[4], msg, dataSize);
-	sendMsg(ADDRESS_MAIN, ((recType & 0x18) >> 3), 0, 0x07, buffer, dataSize+5);
+	sendMsg(ADDRESS_MAIN, ((recType & 0x18) >> 3), 0, 0x07, buffer, dataSize+4);
 	free(buffer);
 }
 
@@ -119,7 +172,7 @@ void msgERR(uint8_t errType, uint8_t recType, uint16_t recSize){
 	buffer[2] = ((recSize-6) & 0xff00) >> 8;
 	buffer[3] = (recSize-6) & 0xff;
 
-	sendMsg(ADDRESS_MAIN, ((recType & 0x18) >> 3), 0, 0x07, buffer, 5);
+	sendMsg(ADDRESS_MAIN, ((recType & 0x18) >> 3), 0, 0x07, buffer, 4);
 	free(buffer);
 }
 

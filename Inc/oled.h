@@ -32,6 +32,27 @@ char* dispmenuname;
 void (*splashFunction)(void*);
 void * splashParams;
 
+#define APP_DISPLAY		0
+
+struct reqNumber{
+	uint8_t application;
+	uint8_t digits;
+	uint8_t selectedDigit;
+	long int enteredNumber;
+	char * message;
+};
+
+struct reqValue{
+	uint8_t application;
+	uint8_t digits;
+	uint8_t selectedDigit;
+	char enteredValue[30];
+	char * message;
+	char * characters;
+	uint8_t charactersLen;
+};
+
+
 int scrollIndex, scrollMax, scrollPauseDone, scrollPause, oledType, loadingStat, refreshHalt, loadingToggle;
 
 char *oledHeader;
@@ -49,11 +70,15 @@ void oled_BtDevInfoSplash(struct btDevice * dev);
 void oled_BtDevPairRequestSplash(struct btDevice * dev);
 void oled_BtDevPairAckSplash(struct btDevice * dev);
 void oled_NothingFound();
+void oled_DisplayStatusSplash();
 void oled_setDisplayedSplash(void (*funct)(), void * params);
 void oled_playingSplash(char * songname);
 void oled_recordingSplash(char * songname);
 void oled_refreshPause();
 void oled_refreshResume();
 void oled_ErrorSplash(char * msg);
+
+void oled_NumberEnterSplash(struct reqNumber * num);
+void oled_ValueEnterSplash(struct reqValue * num);
 
 #endif

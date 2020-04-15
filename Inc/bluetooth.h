@@ -13,10 +13,12 @@ extern struct menuitem bluetoothmenu[];
 #define BT_END "END\r\n"
 #define BT_TIMEOUT 2000
 
+#define BT_STATUS_ERR 	0x00
+#define BT_STATUS_OK	0x01
 
 uint16_t btFifoIndex, btMsgFifoIndex, btComMessageStartIndex, btMessageLen, btStatusMsgWD;
 uint8_t btFifo[500], btFifoByte, btMsgFifo[500];
-uint8_t btScannedCount, btBondedCount, btBondableCount, btCmdMode, btStatusMsg, btStreamOpen, btStreamSecured, btStreamBonded, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag, btSelectedController, btSelectedBondDevice, btPairing;
+uint8_t bluetoothStatus, btScannedCount, btBondedCount, btBondableCount, btCmdMode, btStatusMsg, btStreamOpen, btStreamSecured, btStreamBonded, btNullCounter, btComMessageFlag, btComMessageSizeFlag, btMsgReceivedFlag, btSelectedController, btSelectedBondDevice, btPairing;
 uint8_t *btTxBuff;
 
 uint8_t bluetoothInit();
@@ -37,6 +39,7 @@ void bluetoothMsgFifoFlush();
 uint8_t bluetoothEnterCMD();
 uint8_t bluetoothLeaveCMD();
 uint8_t bluetoothDecodeMsg();
+uint8_t bluetoothGetBondableDevices();
 
 struct menuitem btScanedDevices[20];
 struct menuitem btBondedDevicesMenu[10];

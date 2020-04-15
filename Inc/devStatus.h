@@ -12,6 +12,12 @@
 #define CLR_DATA	0x000040
 #define CLR_LOAD	0x404000
 
+#define CLR_GREEN		0x004000
+#define CLR_RED			0x400000
+#define CLR_BLUE		0x000040
+#define CLR_YELLOW		0x404000
+#define CLR_CLEAR		0x000000
+
 #define DEV_ERR 		0
 #define DEV_OK 			1
 #define DEV_DATA 		2
@@ -36,5 +42,7 @@
 void setStatus(uint8_t perif, uint8_t status);
 void proccessPendingStatus();
 void setStatusAll(uint8_t strip, uint8_t status);
+void setColor(uint8_t perif, uint32_t color);
+void setColorAll(uint8_t strip, uint32_t color);
 
 #endif

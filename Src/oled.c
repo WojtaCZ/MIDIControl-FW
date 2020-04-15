@@ -8,6 +8,8 @@
 #include "midiControl.h"
 #include "devStatus.h"
 #include "msgDecoder.h"
+#include <math.h>
+
 
 //Jednotliva MENU
 
@@ -15,7 +17,7 @@ struct menuitem mainmenu[] = {
 		{"Prehraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Nahraj", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Varhany", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
-		{"Ovladace", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
+		{"Ukazatel", 0, &Font_11x18, 0, 0, 0, 0, 0/*, 0, 0*/},
 		{"Nastaveni", 0, &Font_11x18, 0, 0, 0, 0, 0/*, &settingsmenu, "settingsmenu"*/}
 };
 
@@ -29,6 +31,7 @@ struct menuitem settingsmenu[] = {
 struct menuitem bluetoothmenu[] = {
 		{"Skenovat", 0, &Font_11x18, 0, 0, 0, 2, &settingsmenu[0].name/*, 0, 0*/},
 		{"Sparovat", 0, &Font_11x18, 0, 0, 0, 2, &settingsmenu[0].name/*, 0, 0*/},
+		{"Sparovana zarizeni", 0, &Font_11x18, 0, 0, 0, 2, &settingsmenu[0].name/*, 0, 0*/},
 		{"Informace", 0, &Font_11x18, 0, 0, 0, 2, &settingsmenu[0].name/*, 0, 0*/},
 		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
 };
@@ -46,6 +49,28 @@ struct menuitem controllermenu[] = {
 };
 
 
+struct menuitem displaymenu[] = {
+		{"Stav", 0, &Font_11x18, 0, 0, 0, 2, &mainmenu[2].name/*, 0, 0*/},
+		{"Nastavit", 0, &Font_11x18, 0, 0, 0, 2, &mainmenu[2].name/*, 0, 0*/},
+		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
+};
+
+struct menuitem displaysettingsmenu[] = {
+		{"Pisen", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsmenu[0].name/*, 0, 0*/},
+		{"Sloku", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsmenu[0].name/*, 0, 0*/},
+		{"Pismeno", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsmenu[0].name/*, 0, 0*/},
+		{"LED", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsmenu[0].name/*, 0, 0*/},
+		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
+};
+
+struct menuitem displaysettingsledmenu[] = {
+		{"Cervena", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsledmenu[0].name/*, 0, 0*/},
+		{"Zluta", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsledmenu[0].name/*, 0, 0*/},
+		{"Zelena", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsledmenu[0].name/*, 0, 0*/},
+		{"Modra", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsledmenu[0].name/*, 0, 0*/},
+		{"Zhasnuto", 0, &Font_11x18, 0, 0, 0, 2, &displaysettingsledmenu[0].name/*, 0, 0*/},
+		{"Zpet", 0, &Font_11x18, 1, 36, 37, 2, 0/*, 0, 0*/}
+};
 
 
 //Rutina ktera se vykona pri kliknuti v menu
@@ -79,10 +104,8 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 3:
-				//Nacte sparovane ovladace
-				oled_setDisplayedSplash(oled_LoadingSplash, "Nacitam");
-				workerAssert(&workerBtBondDev);
-
+				//Zobrazi menu ukazatele
+				oled_setDisplayedMenu("displaymenu",&displaymenu, sizeof(displaymenu), 1);
 			break;
 
 			default:
@@ -125,6 +148,12 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 2:
+				//Nacte sparovane ovladace
+				oled_setDisplayedSplash(oled_LoadingSplash, "Nacitam");
+				workerAssert(&workerBtBondDev);
+			break;
+
+			case 3:
 				//Nacte info o sobe
 				bluetooth_refreshSelfInfo();
 			break;
@@ -132,6 +161,110 @@ void oled_menuOnclick(int menupos){
 			default:
 				//Vrati se do nastaveni
 				oled_setDisplayedMenu("settingsmenu",&settingsmenu, sizeof(settingsmenu), 0);
+			break;
+		}
+	}else if(strcmp(dispmenuname, "displaymenu") == 0){
+		switch(menupos){
+			case 0:
+				//
+				oled_setDisplayedSplash(oled_DisplayStatusSplash, "");
+			break;
+
+			case 1:
+				//
+				oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
+
+			break;
+
+			default:
+				//Vrati se do hlavniho menu
+				oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
+			break;
+		}
+	}else if(strcmp(dispmenuname, "displaysettingsmenu") == 0){
+		switch(menupos){
+			case 0:
+				//
+				numDispSong.digits = 4;
+				sprintf(numDispSong.enteredValue, "----");
+				numDispSong.message = "Cislo pisne";
+				numDispSong.selectedDigit = 0;
+				numDispSong.characters = "-0123456789";
+				numDispSong.charactersLen = 11;
+				numDispSong.application = APP_DISPLAY;
+				oled_setDisplayedSplash(oled_ValueEnterSplash, &numDispSong);
+			break;
+
+			case 1:
+				//
+				numDispVerse.digits = 2;
+				sprintf(numDispVerse.enteredValue, "--");
+				numDispVerse.message = "Cislo sloky";
+				numDispVerse.selectedDigit = 0;
+				numDispVerse.characters = "-0123456789";
+				numDispVerse.charactersLen = 11;
+				numDispVerse.application = APP_DISPLAY;
+				oled_setDisplayedSplash(oled_ValueEnterSplash, &numDispVerse);
+
+			break;
+
+			case 2:
+				//
+				numDispLetter.digits = 1;
+				sprintf(numDispLetter.enteredValue, "-");
+				numDispLetter.message = "Pismeno";
+				numDispLetter.selectedDigit = 0;
+				numDispLetter.characters = "-ABCD";
+				numDispLetter.charactersLen = 5;
+				numDispLetter.application = APP_DISPLAY;
+				oled_setDisplayedSplash(oled_ValueEnterSplash, &numDispLetter);
+			break;
+
+			case 3:
+				//
+				oled_setDisplayedMenu("displaysettingsledmenu",&displaysettingsledmenu, sizeof(displaysettingsledmenu), 0);
+			break;
+
+			default:
+				//Vrati se do hlavniho menu
+				oled_setDisplayedMenu("displaymenu",&displaymenu, sizeof(displaymenu), 0);
+			break;
+		}
+	}else if(strcmp(dispmenuname, "displaysettingsledmenu") == 0){
+		switch(menupos){
+			case 0:
+				//
+				dispLED = DISP_LED_RED;
+				workerAssert(&workerDispRefresh);
+			break;
+
+			case 1:
+				//
+				dispLED = DISP_LED_YELLOW;
+				workerAssert(&workerDispRefresh);
+			break;
+
+			case 2:
+				//
+				dispLED = DISP_LED_GREEN;
+				workerAssert(&workerDispRefresh);
+			break;
+
+			case 3:
+				//
+				dispLED = DISP_LED_BLUE;
+				workerAssert(&workerDispRefresh);
+			break;
+
+			case 4:
+				//
+				dispLED = DISP_LED_CLEAR;
+				workerAssert(&workerDispRefresh);
+			break;
+
+			default:
+				//Vrati se do hlavniho menu
+				oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
 			break;
 		}
 	}else if(strcmp(dispmenuname, "songmenu") == 0){
@@ -266,6 +399,7 @@ void oled_setDisplayedMenu(char *menuname ,struct menuitem (*menu)[], int menusi
 void oled_setDisplayedSplash(void (*funct)(), void * params){
 	//Nastavi se pointery na vykonavanou funkci pri splash screen
 	loadingStat = 1;
+	encoderpos = 0;
 	splashFunction = funct;
 	splashParams = params;
 	oledType = OLED_SPLASH;
@@ -780,3 +914,136 @@ void oled_recordingSplash(char * songname){
 		encoderclick = 0;
 	}
 }
+
+void oled_DisplayStatusSplash(){
+
+	char msg[20];
+	//
+	sprintf(msg, " %c%c%c%c ", dispSong[3], dispSong[2], dispSong[1], dispSong[0]);
+	ssd1306_SetCursor((128-(strlen(msg))*16)/2, 3);
+	ssd1306_WriteString(msg, Font_16x26, White);
+
+	sprintf(msg, " %c%c %c ", dispVerse[1], dispVerse[0], dispLetter);
+	ssd1306_SetCursor((128-(strlen(msg))*16)/2, 33);
+	ssd1306_WriteString(msg, Font_16x26, White);
+
+	if(dispLED != dispLEDOld){
+		setColorAll(1, CLR_CLEAR);
+		dispLEDOld = dispLED;
+	}
+
+	switch(dispLED){
+		case DISP_LED_BLUE:
+			setColor(FRONT4, CLR_BLUE);
+		break;
+
+		case DISP_LED_GREEN:
+			setColor(FRONT3, CLR_GREEN);
+		break;
+
+		case DISP_LED_RED:
+			setColor(FRONT1, CLR_RED);
+		break;
+
+		case DISP_LED_YELLOW:
+			setColor(FRONT2, CLR_YELLOW);
+		break;
+
+		default:
+			setColorAll(1, CLR_CLEAR);
+		break;
+
+	}
+
+
+	//Pri kliknuti skoci zpet do menu
+	if(encoderclick){
+		setColorAll(1, CLR_CLEAR);
+		encoderclick = 0;
+		oled_setDisplayedMenu("displaymenu",&displaymenu, sizeof(displaymenu), 0);
+		oledType = OLED_MENU;
+	}
+}
+
+void oled_NumberEnterSplash(struct reqNumber * num){
+
+	dispmenusize = 10;
+
+	char msg[25];
+
+	ssd1306_SetCursor((128-((float)strlen(num->message)-0.5)*11)/2, 1);
+	ssd1306_WriteString(num->message, Font_11x18, White);
+
+
+	sprintf(msg, "%04ld", num->enteredNumber);
+	ssd1306_SetCursor((128-((float)strlen(msg)-0.5)*11)/2, 28);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	if(loadingToggle){
+		for(int x = 0; x < 11; x++){
+			for(int y = 0; y < 3; y++){
+				ssd1306_DrawPixel(x+(128-((float)strlen(msg)-0.5)*11)/2+num->selectedDigit*11, y+48, White);
+			}
+		}
+	}
+
+
+	uint8_t digit = (num->enteredNumber / (long int)pow(10, (num->digits - 1 - num->selectedDigit))) - (num->enteredNumber/(long int)pow(10, (num->digits - 1 - num->selectedDigit)+1))*10;
+
+	num->enteredNumber = num->enteredNumber - digit*pow(10, (num->digits - 1 - num->selectedDigit)) + encoderpos*pow(10, (num->digits - 1 - num->selectedDigit));
+
+
+	if(encoderclick){
+		//workerAssert(&workerBtEnterPairingKey);
+		oledType = OLED_MENU;
+		encoderclick = 0;
+	}
+}
+
+void oled_ValueEnterSplash(struct reqValue * num){
+
+	encoderDirSwap = 1;
+	dispmenusize = num->charactersLen;
+
+	num->enteredValue[num->selectedDigit] = num->characters[encoderpos];
+
+	char msg[40];
+
+	ssd1306_SetCursor((128-((float)strlen(num->message)-0.5)*11)/2, 1);
+	ssd1306_WriteString(num->message, Font_11x18, White);
+
+	sprintf(msg, "%*s", num->digits ,num->enteredValue);
+	ssd1306_SetCursor((128-((float)strlen(msg)-0.5)*11)/2, 28);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	if(loadingToggle){
+		for(int x = 0; x < 11; x++){
+			for(int y = 0; y < 3; y++){
+				ssd1306_DrawPixel(x+(128-((float)strlen(msg)-0.5)*11)/2+num->selectedDigit*11, y+48, White);
+			}
+		}
+	}
+
+
+	/*uint8_t digit = (num->enteredNumber / (long int)pow(10, (num->digits - 1 - num->selectedDigit))) - (num->enteredNumber/(long int)pow(10, (num->digits - 1 - num->selectedDigit)+1))*10;
+
+	num->enteredNumber = num->enteredNumber - digit*pow(10, (num->digits - 1 - num->selectedDigit)) + encoderpos*pow(10, (num->digits - 1 - num->selectedDigit));
+
+*/
+	if(encoderclick && num->selectedDigit >= (num->digits-1)){
+
+		if(num->application == APP_DISPLAY){
+			workerAssert(&workerDispRefresh);
+		}
+
+		encoderDirSwap = 0;
+		encoderclick = 0;
+		oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
+		oledType = OLED_MENU;
+	}else if(encoderclick){
+		num->selectedDigit++;
+		encoderclick = 0;
+		encoderpos = 0;
+	}
+}
+

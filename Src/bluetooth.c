@@ -164,7 +164,7 @@ void bluetoothMsgFifoFlush(){
 //Zapnuti CMD modu modulu
 uint8_t bluetoothEnterCMD(){
 	if(btCmdMode) return 1;
-	if(!bluetoothCMD_ACK("$$$", BT_CMD));
+	if(!bluetoothCMD_ACK("$$$", BT_CMD)){};
 	btCmdMode = 1;
 	return 1;
 }
@@ -172,7 +172,7 @@ uint8_t bluetoothEnterCMD(){
 //Vypnuti CMD modu modulu
 uint8_t bluetoothLeaveCMD(){
 	if(!btCmdMode) return 1;
-	if(!bluetoothCMD_ACK("---\r", BT_END));
+	if(!bluetoothCMD_ACK("---\r", BT_END)){};
 	btCmdMode = 0;
 	return 1;
 }
