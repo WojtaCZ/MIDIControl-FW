@@ -23,8 +23,7 @@ struct menuitem mainmenu[] = {
 
 struct menuitem settingsmenu[] = {
 		{"Bluetooth", 0, &Font_11x18, 0, 0, 0, 1, &mainmenu[3].name/*, 0, 0*/},
-		{"USB", 0, &Font_11x18, 0, 0, 0, 1, &mainmenu[3].name/*, 0, 0*/},
-		{"MIDI", 0, &Font_11x18, 0, 0, 0, 1, &mainmenu[3].name/*, 0, 0*/},
+		{"Stav MIDI", 0, &Font_11x18, 0, 0, 0, 1, &mainmenu[3].name/*, 0, 0*/},
 		{"Zpet", 0, &Font_11x18, 1, 36, 37, 1, 0/*, 0, 0*/}
 };
 
@@ -94,8 +93,15 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 1:
-				//Odesle zpravu pro nahravani
-				oled_refreshPause();
+				//Necha uzivatele zadat cislo pisne
+				numRecordSong.digits = 4;
+				sprintf(numRecordSong.enteredValue, "----");
+				numRecordSong.message = "Cislo pisne";
+				numRecordSong.selectedDigit = 0;
+				numRecordSong.characters = "-0123456789";
+				numRecordSong.charactersLen = 11;
+				numRecordSong.application = APP_RECORD;
+				oled_setDisplayedSplash(oled_ValueEnterSplash, &numRecordSong);
 			break;
 
 			case 2:
@@ -122,9 +128,7 @@ void oled_menuOnclick(int menupos){
 			break;
 
 			case 1:
-			break;
-
-			case 2:
+				oled_setDisplayedSplash(oled_MIDIstatusSplash, "");
 			break;
 
 			default:
@@ -155,7 +159,7 @@ void oled_menuOnclick(int menupos){
 
 			case 3:
 				//Nacte info o sobe
-				bluetooth_refreshSelfInfo();
+				oled_setDisplayedSplash(oled_BtDevInfoSplash, &btModule);
 			break;
 
 			default:
@@ -420,9 +424,9 @@ void oled_drawMenu(){
 	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
 	//Vypise se hlavicka
-	sprintf(oledHeader, "%d %d %d %d", alivePC, aliveRemote, btCmdMode, btStreamOpen);
+	//sprintf(oledHeader, "%d %d %d %d", alivePC, aliveRemote, btCmdMode, btStreamOpen);
 	//sprintf(oledHeader, "%d.%d %d:%d  %d %d",date.Date, date.Month, time.Hours, time.Minutes, alivePC, aliveRemote);
-	//sprintf(oledHeader, "E: %d N: %s", encoderpos, dispmenu[encoderpos].name);
+	sprintf(oledHeader, "%d %d %d", encoderpos, encoderclick, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
 	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
@@ -582,13 +586,32 @@ void oled_LoadingSplash(char * msg){
 
 //Funkce pro vypsani chyby
 void oled_ErrorSplash(char * msg){
-	ssd1306_SetCursor((128-(strlen("Chyba!"))*11)/2, 15);
+	ssd1306_SetCursor((128-(strlen("Chyba!"))*11)/2, 1);
 	ssd1306_WriteString("Chyba!", Font_11x18, White);
 
-	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 15);
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 20);
 	ssd1306_WriteString(msg, Font_7x10, White);
 
 	encoderclick = 0;
+
+}
+
+//Funkce pro vypsani chyby
+void oled_NameExistsSplash(){
+	ssd1306_SetCursor((128-(strlen("Chyba!"))*11)/2, 1);
+	ssd1306_WriteString("Chyba!", Font_11x18, White);
+
+	ssd1306_SetCursor((128-(strlen("Pisen"))*7)/2, 25);
+	ssd1306_WriteString("Pisen", Font_7x10, White);
+
+	ssd1306_SetCursor((128-(strlen("jiz existuje!"))*7)/2, 40);
+	ssd1306_WriteString("jiz existuje!", Font_7x10, White);
+
+	if(encoderclick){
+		encoderclick = 0;
+		oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
+		oledType = OLED_MENU;
+	}
 
 }
 
@@ -802,6 +825,39 @@ void oled_BtDevPairCompleteSplash(char * msg){
 	}
 }
 
+//Obrazovka vypisujici stav MIDI
+void oled_MIDIstatusSplash(){
+
+	//Vypise se hlaska
+	char msg[25];
+
+	//Vypise se hlaska
+	sprintf(msg, "Stav MIDI");
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 1);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	sprintf(msg, " IN   OUT");
+	ssd1306_SetCursor((128-(strlen(msg))*11)/2, 25);
+	ssd1306_WriteString(msg, Font_11x18, White);
+
+	if(midiStatus == MIDI_A){
+		sprintf(msg, "MIDI A   MIDI B");
+	}else{
+		sprintf(msg, "MIDI B   MIDI A");
+	}
+
+	ssd1306_SetCursor((128-(strlen(msg))*7)/2, 45);
+	ssd1306_WriteString(msg, Font_7x10, White);
+
+	//Pri kliknuti skoci zpet do menu
+	if(encoderclick){
+		encoderclick = 0;
+		oled_setDisplayedMenu("settingsmenu",&settingsmenu, sizeof(settingsmenu), 0);
+		oledType = OLED_MENU;
+	}
+}
+
+
 //Vykresli obrazovku prehravani
 void oled_playingSplash(char * songname){
 
@@ -821,7 +877,7 @@ void oled_playingSplash(char * songname){
 			memset(tmp+9, 0, strlen(songname)-9);
 			ssd1306_WriteString(tmp, Font_11x18, White);
 		}else{
-			ssd1306_SetCursor((128-(strlen(songname))*9)/2, 25);
+			ssd1306_SetCursor((128-(strlen(songname))*11)/2, 25);
 			ssd1306_WriteString(songname, Font_11x18, White);
 		}
 
@@ -878,7 +934,7 @@ void oled_recordingSplash(char * songname){
 			memset(tmp+9, 0, strlen(songname)-9);
 			ssd1306_WriteString(tmp, Font_11x18, White);
 		}else{
-			ssd1306_SetCursor((128-(strlen(songname))*9)/2, 25);
+			ssd1306_SetCursor((128-(strlen(songname))*11)/2, 25);
 			ssd1306_WriteString(songname, Font_11x18, White);
 		}
 
@@ -912,6 +968,7 @@ void oled_recordingSplash(char * songname){
 		//Zastavi prehravani
 		midiControl_stop(ADDRESS_MAIN);
 		encoderclick = 0;
+		encoderDirSwap = 0;
 	}
 }
 
@@ -1024,22 +1081,22 @@ void oled_ValueEnterSplash(struct reqValue * num){
 		}
 	}
 
-
-	/*uint8_t digit = (num->enteredNumber / (long int)pow(10, (num->digits - 1 - num->selectedDigit))) - (num->enteredNumber/(long int)pow(10, (num->digits - 1 - num->selectedDigit)+1))*10;
-
-	num->enteredNumber = num->enteredNumber - digit*pow(10, (num->digits - 1 - num->selectedDigit)) + encoderpos*pow(10, (num->digits - 1 - num->selectedDigit));
-
-*/
 	if(encoderclick && num->selectedDigit >= (num->digits-1)){
-
-		if(num->application == APP_DISPLAY){
-			workerAssert(&workerDispRefresh);
-		}
 
 		encoderDirSwap = 0;
 		encoderclick = 0;
-		oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
-		oledType = OLED_MENU;
+
+		if(num->application == APP_DISPLAY){
+			workerAssert(&workerDispRefresh);
+			oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
+			oledType = OLED_MENU;
+		}else if(num->application == APP_RECORD){
+			encoderDirSwap = 0;
+			workerAssert(&workerRecord);
+			workerRecord.status = WORKER_REQUEST;
+			oledType = OLED_MENU;
+		}
+
 	}else if(encoderclick){
 		num->selectedDigit++;
 		encoderclick = 0;

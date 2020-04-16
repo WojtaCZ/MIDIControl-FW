@@ -55,7 +55,7 @@ char decoderBuffer[255];
 
 uint8_t reqAOKsongList;
 
-void decodeMessage(char *msg, uint16_t len, uint8_t broadcast);
+void decodeMessage(char *msg, uint8_t broadcast);
 void msgAOK(uint8_t aokType, uint8_t recType, uint16_t recSize, uint16_t dataSize, char * msg);
 void msgERR(uint8_t errType, uint8_t recType, uint16_t recSize);
 void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * msg, uint16_t len);

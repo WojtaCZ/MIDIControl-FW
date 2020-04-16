@@ -33,6 +33,7 @@ void (*splashFunction)(void*);
 void * splashParams;
 
 #define APP_DISPLAY		0
+#define APP_RECORD		1
 
 struct reqNumber{
 	uint8_t application;
@@ -77,6 +78,8 @@ void oled_recordingSplash(char * songname);
 void oled_refreshPause();
 void oled_refreshResume();
 void oled_ErrorSplash(char * msg);
+void oled_MIDIstatusSplash();
+void oled_NameExistsSplash();
 
 void oled_NumberEnterSplash(struct reqNumber * num);
 void oled_ValueEnterSplash(struct reqValue * num);

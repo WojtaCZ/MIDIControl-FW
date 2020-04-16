@@ -152,10 +152,12 @@ void midiControl_record(uint8_t initiator, char * songname){
 	if(initiator == ADDRESS_PC){
 		//Jen se zobrazi obrazovka nahravani
 		oled_setDisplayedSplash(oled_recordingSplash, songname);
+		oled_refreshPause();
 	}else if(initiator == ADDRESS_CONTROLLER){
 	//Spusteno ovladacem
 		//Jen se zobrazi obrazovka nahravani
-		oled_setDisplayedSplash(oled_recordingSplash, songname);
+		//oled_setDisplayedSplash(oled_recordingSplash, songname);
+		//oled_refreshPause();
 	}else if(initiator == ADDRESS_MAIN){
 	//Spusteno ze zakladnove stanice
 		//Posle se zprava do PC aby zacalo nahravat
@@ -176,10 +178,12 @@ void midiControl_play(uint8_t initiator, char * songname){
 		sprintf(selectedSong, "%s", songname);
 		//Jen se zobrazi obrazovka prehravani
 		oled_setDisplayedSplash(oled_playingSplash, songname);
+		oled_refreshPause();
 	}else if(initiator == 0x01){
 	//Spusteno ovladacem
 		//Jen se zobrazi obrazovka prehravani
-		oled_setDisplayedSplash(oled_playingSplash, songname);
+		//oled_setDisplayedSplash(oled_playingSplash, songname);
+		//oled_refreshPause();
 	}else if(initiator == 0x02){
 	//Spusteno ze zakladnove stanice
 		//Posle se zprava do PC aby zacalo prehravat

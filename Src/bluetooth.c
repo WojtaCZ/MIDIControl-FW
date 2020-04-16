@@ -27,6 +27,15 @@ uint8_t bluetoothInit(){
 	btPairing = 0;
 	workerBtConnectMAC = (char *) malloc(50);
 
+	btModule.mac[0] = 0xD8;
+	btModule.mac[1] = 0x80;
+	btModule.mac[2] = 0x39;
+	btModule.mac[3] = 0xFF;
+	btModule.mac[4] = 0xF0;
+	btModule.mac[5] = 0xB0;
+	sprintf(btModule.name, "MIDIControl");
+	btModule.rssi = 0;
+
 	//Zecne se prijem
 	HAL_UART_Receive_IT(&huart2, &btFifoByte, 1);
 

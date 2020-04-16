@@ -12,23 +12,29 @@ extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 
 //Rutina pro dekodovani zprav komunikacniho protokolu zarizeni
-void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
+void decodeMessage(char * msg, uint8_t broadcast){
 	//Internal
 	char msgType = msg[6];
 
 	uint8_t src = ((msg[6] & 0x18) >> 3);
 	uint8_t type = ((msgType & 0xE0) >> 5);
 
+	uint16_t len = (msg[4]<<8 | msg[5]);
 
 	if(type == INTERNAL){
 		if(msg[7] == INTERNAL_COM){
 			if(msg[8] == INTERNAL_COM_PLAY){
-				msg[len] = 0;
-				midiControl_play(src, &msg[9]);
+				char * buffPlay = (char*) malloc(50);
+				memset(buffPlay, 0, 50);
+				memcpy(buffPlay, msg+9, len-3);
+				midiControl_play(src, buffPlay);
 			}else if(msg[8] == INTERNAL_COM_STOP){
 				midiControl_stop(src);
 			}else if(msg[8] == INTERNAL_COM_REC){
-				midiControl_record(src, &msg[9]);
+				char * buffRec = (char*) malloc(50);
+				memset(buffRec, 0, 50);
+				memcpy(buffRec, msg+9, len-3);
+				midiControl_record(src, buffRec);
 			}else if(msg[8] == INTERNAL_COM_KEEPALIVE){
 				if(src == ADDRESS_CONTROLLER){
 					aliveRemote = 1;
@@ -122,23 +128,32 @@ void decodeMessage(char * msg, uint16_t len, uint8_t broadcast){
 
 		}else msgERR(0, msgType, len);
 	}else if(type == EXTERNAL_DISP){
-		midiControl_setDisplayRaw((uint8_t*)&msg[7], len-7);
+		midiControl_setDisplayRaw((uint8_t*)&msg[7], len-1);
 	}else if(type == EXTERNAL_BT){
-		HAL_UART_Transmit_IT(&huart2, (uint8_t*)&msg[7], len-7);
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*)&msg[7], len-1);
 	}else if(type == EXTERNAL_MIDI){
-		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&msg[7], len-7);
+		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&msg[7], len-1);
 	}else if(type == EXTERNAL_USB){
-		CDC_Transmit_FS((uint8_t*)&msg[7], len-7);
+		CDC_Transmit_FS((uint8_t*)&msg[7], len-1);
 	}else if(type == AOKERR){
 		if((msg[7] & 0x80) == AOK){
 
-			//Pokud se jedna o odpoved na zpravu z hl. jednotky do PC
+			//Pokud se jedna o odpoved na zpravu z PC do hl. jednotky
 			if(msg[8] == 0x30){
 				if(workerGetSongs.assert && workerGetSongs.status == WORKER_WAITING){
 					workerGetSongs.status = WORKER_OK;
 					strToSongMenu(&msg[11], &songMenuSize);
 				}
-			}
+
+				if(workerRecord.assert && workerRecord.status == WORKER_WAITING){
+					if(msg[11] == 1){
+						workerRecord.status = WORKER_ERR;
+					}else{
+						workerRecord.status = WORKER_OK;
+					}
+				}
+
+				}
 		}else if((msg[7] & 0x80) == ERR){
 			if(workerGetSongs.assert && workerGetSongs.status == WORKER_WAITING){
 				workerGetSongs.status = WORKER_ERR;

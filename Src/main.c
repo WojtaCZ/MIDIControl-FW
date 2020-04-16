@@ -203,7 +203,7 @@ int main(void)
 	  }
 
 	  if(btMsgReceivedFlag){
-		  decodeMessage(uartMsgDecodeBuff, btMessageLen+6, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+		  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 		  btMsgReceivedFlag = 0;
 	  }
 
@@ -308,16 +308,35 @@ int main(void)
 		  workerDesert(&workerDispRefresh);
 	  }
 
+	  if(workerRecord.assert){
+		  if(workerRecord.status == WORKER_REQUEST){
+			  char msg[50];
+			  msg[0] = INTERNAL_COM;
+			  msg[1] = INTERNAL_COM_CHECK_NAME;
+			  sprintf(&msg[2], "%s", numRecordSong.enteredValue);
+			  sendMsg(ADDRESS_MAIN, ADDRESS_PC, 0, INTERNAL, msg, strlen(numRecordSong.enteredValue)+2);
+			  workerRecord.status = WORKER_WAITING;
+		  }else if(workerRecord.status == WORKER_OK){
+			  midiControl_record(ADDRESS_MAIN, numRecordSong.enteredValue);
+			  workerDesert(&workerRecord);
+		  }else if(workerRecord.status == WORKER_ERR){
+			  oled_setDisplayedSplash(oled_NameExistsSplash, "");
+			  workerDesert(&workerRecord);
+		  }
 
-	/*  if(!alivePC){
+	  }
+
+
+	  /*if(!alivePC){
+		  setStatusAll(1, DEV_CLR);
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oled_refresh();
 	  	  while(!alivePC){
 	  		  HAL_Delay(100);
 	  	  }
 	  	  oledType = OLED_MENU;
-	  }
-*/
+	  }*/
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -469,7 +488,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 		midiControl_keepalive_process();
 
-		if(loadingStat > 4){
+		if(loadingStat == 2){
 			workerAssert(&workerMiscellaneous);
 		}
 
@@ -526,13 +545,14 @@ void USB_received_handle(char * buff, uint32_t len){
 	if(len > 5 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
 		setStatus(FRONT1, DEV_DATA);
 
-		uint16_t msgLen = ((((unsigned char)buff[4] << 8)& 0xff00) | ((unsigned char)buff[5] & 0xff));
+		uint16_t msgLen = ((buff[4]&0xff)<<8 | (buff[5]&0xff));
 
 		memcpy(&decoderBuffer, buff, msgLen+6);
 
 		//Pokud je pro toto zarizeni
 		if((buff[6] & 0x03) == ADDRESS_MAIN && ((buff[6] & 0x04) >> 2) == 0){
-			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
+			if(buff[8] == INTERNAL_COM_PLAY) sprintf(oledHeader, "%d %d %d", buff[4], buff[5], msgLen);
+			decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
 		}else if((buff[6] & 0x04) >> 2){
 			//Pokud je broadcast
 			//Dekoduje a preposle na BT
@@ -540,7 +560,7 @@ void USB_received_handle(char * buff, uint32_t len){
 				HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
 			}
 
-			decodeMessage(decoderBuffer, msgLen+6, (buff[6] & 0x04) >> 3);
+			decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
 
 
 		}else{

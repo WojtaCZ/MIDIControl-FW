@@ -22,7 +22,7 @@ uint8_t dispData[9];
 uint8_t dispVerse[2], dispLetter, dispLED, dispLEDOld;
 uint16_t dispSong[4];
 
-struct reqValue numDispSong, numDispVerse, numDispLetter;
+struct reqValue numDispSong, numDispVerse, numDispLetter, numRecordSong;
 
 #define DISP_LED_RED 	0
 #define DISP_LED_GREEN	2
@@ -42,6 +42,7 @@ char selectedSong[40];
 #define WORKER_WAITING	0x00
 #define WORKER_ERR		0x01
 #define WORKER_OK		0x02
+#define WORKER_REQUEST	0x03
 
 struct worker{
 	uint8_t assert;
@@ -50,7 +51,7 @@ struct worker{
 
 
 //Flagy pro "workery"
-struct worker workerBtScanDev, workerBtBondDev, workerBtConnect, workerBtBond, workerBtScanBondable, workerBtRemoveController, workerGetSongs, workerMiscellaneous, workerDispRefresh;
+struct worker workerBtScanDev, workerBtBondDev, workerBtConnect, workerBtBond, workerBtScanBondable, workerBtRemoveController, workerGetSongs, workerMiscellaneous, workerDispRefresh, workerRecord;
 char * workerBtConnectMAC;
 
 
