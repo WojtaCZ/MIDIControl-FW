@@ -1107,11 +1107,13 @@ void oled_ValueEnterSplash(struct reqValue * num){
 		encoderclick = 0;
 
 		if(num->application == APP_DISPLAY){
+			encoderclick = 0;
 			workerAssert(&workerDispRefresh);
 			oled_setDisplayedMenu("displaysettingsmenu",&displaysettingsmenu, sizeof(displaysettingsmenu), 0);
 			oledType = OLED_MENU;
 		}else if(num->application == APP_RECORD){
 			encoderDirSwap = 0;
+			encoderclick = 0;
 			workerAssert(&workerRecord);
 			workerRecord.status = WORKER_REQUEST;
 			oledType = OLED_MENU;

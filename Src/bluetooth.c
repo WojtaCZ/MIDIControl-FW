@@ -97,7 +97,7 @@ uint8_t bluetoothDecodeMsg(){
 
 	//Pokud obsahuje retezec, vykona se
 	if(strstr((char *)btMsgFifo, "%CONNECT") != 0){
-		//if(btPairing) workerAssert(&workerBtBond);
+		if(btPairing) workerAssert(&workerBtBond);
 
 		//Zobrazi obrazovku zadosti o parovani
 		index = strstr((char *)btMsgFifo, "%CONNECT");

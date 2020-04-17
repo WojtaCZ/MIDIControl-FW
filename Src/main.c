@@ -67,7 +67,7 @@ int readBytes = 0;
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern struct menuitem mainmenu[5];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -205,7 +205,15 @@ int main(void)
 	  }
 
 	  if(btMsgReceivedFlag){
-		  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+		  uint8_t dest = uartMsgDecodeBuff[6] & 0x03;
+		  uint8_t broadcast = (uartMsgDecodeBuff[6] & 0x04) >> 2;
+		  uint16_t msgLen = ((uartMsgDecodeBuff[4]&0xff)<<8 | (uartMsgDecodeBuff[5]&0xff));
+		  if(dest == ADDRESS_MAIN || broadcast){
+			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+		  }else{
+			  CDC_Transmit_FS(uartMsgDecodeBuff, msgLen);
+		  }
+
 		  btMsgReceivedFlag = 0;
 	  }
 
@@ -215,6 +223,7 @@ int main(void)
 	  		sprintf(cmd,"U,%d\r", (btSelectedController+1));
 	  		bluetoothCMD_ACK(cmd, BT_AOK);
 	  		if(btCmdMode) bluetoothLeaveCMD();
+	  		oled_setDisplayedMenu("mainmenu",&mainmenu, sizeof(mainmenu), 0);
 	  		workerBtRemoveController.assert = 0;
 	  }
 
@@ -275,7 +284,7 @@ int main(void)
 		  }
 
 		  //Pokud se lisi nastavene a existujici cislo sloky
-		  sprintf(buff, "%c%c%", dispVerse[1], dispVerse[0]);
+		  sprintf(buff, "%c%c", dispVerse[1], dispVerse[0]);
 		  if(strcmp(numDispSong.enteredValue,buff)){
 			  dispVerse[1] = numDispVerse.enteredValue[0];
 			  dispVerse[0] = numDispVerse.enteredValue[1];
