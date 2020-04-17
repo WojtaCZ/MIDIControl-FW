@@ -25,6 +25,7 @@ uint8_t bluetoothInit(){
 	btMsgReceivedFlag = 0;
 	btSelectedController = 0;
 	btPairing = 0;
+	btData = 0;
 	workerBtConnectMAC = (char *) malloc(50);
 
 	btModule.mac[0] = 0xD8;

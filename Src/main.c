@@ -124,6 +124,7 @@ int main(void)
   MX_TIM2_Init();
   MX_RTC_Init();
   MX_TIM4_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
   //Inicializuje se system MIDIControl
@@ -157,15 +158,15 @@ int main(void)
   midiControl_midiIO_getState();
 
 
-  /*if(!alivePC){
+  if(!alivePC){
 	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  while(!alivePC){
 		  if(btMsgReceivedFlag){
-			  decodeMessage(uartMsgDecodeBuff, btMessageLen+6, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 			  btMsgReceivedFlag = 0;
 		  }
 	  }
-  }*/
+  }
 
 
   //Ziska se aktualni cas
@@ -177,6 +178,7 @@ int main(void)
 
   HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
   HAL_UART_Receive_DMA(&huart1, dispData, 9);
+  HAL_TIM_Base_Start_IT(&htim7);
 
 
 
@@ -327,7 +329,7 @@ int main(void)
 	  }
 
 
-	  /*if(!alivePC){
+	  if(!alivePC){
 		  setStatusAll(1, DEV_CLR);
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oled_refresh();
@@ -335,7 +337,7 @@ int main(void)
 	  		  HAL_Delay(100);
 	  	  }
 	  	  oledType = OLED_MENU;
-	  }*/
+	  }
 
     /* USER CODE END WHILE */
 
@@ -535,6 +537,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		proccessPendingStatus();
 	}
 
+	if(htim->Instance == TIM7){
+		if(btData && btDataIcon == -1){
+			btDataIcon = 0;
+		}
+
+		if(btDataIcon != -1 && btDataIcon < 3){
+			btDataIcon++;
+		}else if(btDataIcon != -1){
+			btDataIcon = -1;
+			btData = 0;
+		}
+	}
+
 
 }
 
@@ -543,7 +558,6 @@ void USB_received_handle(char * buff, uint32_t len){
 	setStatus(DEV_USB, DEV_DATA);
 
 	if(len > 5 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
-		setStatus(FRONT1, DEV_DATA);
 
 		uint16_t msgLen = ((buff[4]&0xff)<<8 | (buff[5]&0xff));
 

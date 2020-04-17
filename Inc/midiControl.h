@@ -14,6 +14,7 @@ uint8_t midiFifo[500], uartMsgDecodeBuff[300];
 
 //midiStatus = rika jaky MIDI je RX
 uint8_t dispStatus, dispConnected, currentStatus, midiStatus, usbStatus;
+int8_t btDataIcon;
 
 uint8_t alivePC, aliveRemote, alivePCCounter, aliveRemoteCounter;
 

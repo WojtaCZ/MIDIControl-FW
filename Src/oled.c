@@ -425,8 +425,8 @@ void oled_drawMenu(){
 
 	//Vypise se hlavicka
 	//sprintf(oledHeader, "%d %d %d %d", alivePC, aliveRemote, btCmdMode, btStreamOpen);
-	//sprintf(oledHeader, "%d.%d %d:%d  %d %d",date.Date, date.Month, time.Hours, time.Minutes, alivePC, aliveRemote);
-	sprintf(oledHeader, "%d %d %d", encoderpos, encoderclick, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
+	sprintf(oledHeader, "%2d.%2d. %2d:%02d",date.Date, date.Month, time.Hours, time.Minutes);
+	//sprintf(oledHeader, "%d %d %d", encoderpos, encoderclick, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = "MIDIControll 0.1";
 	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
@@ -434,6 +434,26 @@ void oled_drawMenu(){
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
 
+	if(btStreamOpen){
+		if(btDataIcon >= 0){
+			ssd1306_SetCursor(114,0);
+			ssd1306_WriteChar(42+(2*btDataIcon), Icon_7x10, White);
+			ssd1306_SetCursor(121,0);
+			ssd1306_WriteChar(43+(2*btDataIcon), Icon_7x10, White);
+		}else{
+			ssd1306_SetCursor(114,0);
+			ssd1306_WriteChar(42+6, Icon_7x10, White);
+			ssd1306_SetCursor(121,0);
+			ssd1306_WriteChar(43+6, Icon_7x10, White);
+		}
+	}else{
+		if(loadingToggle){
+			ssd1306_SetCursor(114,0);
+			ssd1306_WriteChar(42+6, Icon_7x10, White);
+			ssd1306_SetCursor(121,0);
+			ssd1306_WriteChar(43+6, Icon_7x10, White);
+		}
+	}
 	//for(uint8_t i = 0; i <= 128; i++) ssd1306_DrawPixel(i, 13, White);
 
 

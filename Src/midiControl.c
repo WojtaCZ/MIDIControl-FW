@@ -61,6 +61,7 @@ void midiControl_init(){
 	alivePCCounter = 0;
 	aliveRemoteCounter = 0;
 	usbStatus = 1;
+	btDataIcon = -1;
 	dispSong[0] = '-';
 	dispSong[1] = '-';
 	dispSong[2] = '-';
@@ -151,6 +152,7 @@ void midiControl_record(uint8_t initiator, char * songname){
 	//Spusteno z PC
 	if(initiator == ADDRESS_PC){
 		//Jen se zobrazi obrazovka nahravani
+		midiControl_current_On();
 		oled_setDisplayedSplash(oled_recordingSplash, songname);
 		oled_refreshPause();
 	}else if(initiator == ADDRESS_CONTROLLER){
@@ -174,6 +176,7 @@ void midiControl_record(uint8_t initiator, char * songname){
 void midiControl_play(uint8_t initiator, char * songname){
 	//Spusteno z PC
 	if(initiator == 0x00){
+		midiControl_current_On();
 		memset(selectedSong, 0, 40);
 		sprintf(selectedSong, "%s", songname);
 		//Jen se zobrazi obrazovka prehravani

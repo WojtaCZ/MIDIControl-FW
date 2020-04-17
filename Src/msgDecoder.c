@@ -21,6 +21,8 @@ void decodeMessage(char * msg, uint8_t broadcast){
 
 	uint16_t len = (msg[4]<<8 | msg[5]);
 
+	if(src == ADDRESS_CONTROLLER) btData = 1;
+
 	if(type == INTERNAL){
 		if(msg[7] == INTERNAL_COM){
 			if(msg[8] == INTERNAL_COM_PLAY){
@@ -206,11 +208,15 @@ void sendMsg(uint8_t src, uint8_t dest, uint8_t broadcast, uint8_t type, char * 
 	//Podle cile ji odesle na ruzne rozhrani
 	if(broadcast){
 		CDC_Transmit_FS(buffer, len+7);
-		if(btStreamOpen && !btCmdMode) HAL_UART_Transmit_IT(&huart2, buffer, len+7);
+		if(btStreamOpen && !btCmdMode){
+			HAL_UART_Transmit_IT(&huart2, buffer, len+7);
+			btData = 1;
+		}
 	}else if(dest == ADDRESS_PC){
 		CDC_Transmit_FS(buffer, len+7);
 	}else if(dest == ADDRESS_CONTROLLER && btStreamOpen && !btCmdMode){
 		HAL_UART_Transmit_IT(&huart2, buffer, len+7);
+		btData = 1;
 	}
 
 }
