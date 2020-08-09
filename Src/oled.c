@@ -428,9 +428,7 @@ void oled_drawMenu(){
 	sprintf(oledHeader, "%2d.%2d. %2d:%02d",date.Date, date.Month, time.Hours, time.Minutes);
 	//sprintf(oledHeader, "%d %d %d", encoderpos, encoderclick, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
-	//oledHeader = "MIDIControll 0.1";
-	//sprintf(oledHeader, "%d %d %d", HAL_GPIO_ReadPin(MIDI_ACTIVE_GPIO_Port, MIDI_ACTIVE_Pin), HAL_GPIO_ReadPin(MIDI_SEARCHING_GPIO_Port, MIDI_SEARCHING_Pin), HAL_GPIO_ReadPin(MIDI_IO_SELECTED_GPIO_Port, MIDI_IO_SELECTED_Pin));
-	//sprintf(oledHeader, "E: %d", loadingStat);
+	//oledHeader = NAME " " VERSION;
 	ssd1306_SetCursor(2,0);
 	ssd1306_WriteString(oledHeader, Font_7x10, White);
 
@@ -573,13 +571,13 @@ void oled_refreshResume(){
 //Funkce vykreslujici zapinaci obrazovku
 void oled_StartSplash(){
 	//Vypisou se texty
-	ssd1306_SetCursor((128-(strlen("MIDIControl"))*11)/2,10);
-	ssd1306_WriteString("MIDIControl", Font_11x18, White);
+	ssd1306_SetCursor((128-(strlen(NAME))*11)/2,10);
+	ssd1306_WriteString(NAME, Font_11x18, White);
 
-	ssd1306_SetCursor((128-(strlen("BASE"))*11)/2,30);
-	ssd1306_WriteString("BASE", Font_11x18, White);
+	ssd1306_SetCursor((128-(strlen(DEVICE_TYPE))*11)/2,30);
+	ssd1306_WriteString(DEVICE_TYPE, Font_11x18, White);
 
-	char * version = "Verze 1.1";
+	char * version = "Verze " VERSION;
 	ssd1306_SetCursor((128-(strlen(version))*7)/2,50);
 	ssd1306_WriteString(version, Font_7x10, White);
 

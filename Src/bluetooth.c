@@ -34,7 +34,7 @@ uint8_t bluetoothInit(){
 	btModule.mac[3] = 0xFF;
 	btModule.mac[4] = 0xF0;
 	btModule.mac[5] = 0xB0;
-	sprintf(btModule.name, "MIDIControl");
+	sprintf(btModule.name, NAME);
 	btModule.rssi = 0;
 
 	//Zecne se prijem
@@ -55,29 +55,40 @@ uint8_t bluetoothInit(){
 
 	//Nastavi se dev info a UART
 	if(!bluetoothCMD_ACK("GS\r", "E0")){
+		HAL_Delay(100);
 		if(!bluetoothCMD_ACK("SS,E0\r", BT_AOK)) return 0;
+		HAL_Delay(100);
 		if(!bluetoothCMD_ACK("R,1\r", "REBOOT")) return 0;
 	}
 
 	//Zkontroluje se nazev
-	if(!bluetoothCMD_ACK("GN\r", "MIDIControl")){
-		if(!bluetoothCMD_ACK("SN,MIDIControl\r", BT_AOK)) return 0;
+	HAL_Delay(100);
+	if(!bluetoothCMD_ACK("GN\r", NAME)){
+		HAL_Delay(100);
+		if(!bluetoothCMD_ACK("SN,"NAME"\r", BT_AOK)) return 0;
 	}
 
 	//Nastavi se vyzarovaci vykon
+	HAL_Delay(100);
 	if(!bluetoothCMD_ACK("SGA,0\r", BT_AOK)) return 0;
+	HAL_Delay(100);
 	if(!bluetoothCMD_ACK("SGC,0\r", BT_AOK)) return 0;
 
 	//Apperance jako Media Player - Remote je 0180
+	HAL_Delay(100);
 	if(!bluetoothCMD_ACK("SDA,0280\r", BT_AOK)) return 0;
 
 	//Vyrobce
-	if(!bluetoothCMD_ACK("SDN,Vojtech Vosahlo\r", BT_AOK)) return 0;
+	if(!bluetoothCMD_ACK("SS,E0\r", BT_AOK)) return 0;
+	HAL_Delay(100);
+	if(!bluetoothCMD_ACK("SDN,"AUTHOR"\r", BT_AOK)) return 0;
 
 	//Automaticky potvrdi pin
+	HAL_Delay(100);
 	if(!bluetoothCMD_ACK("SA,5\r", BT_AOK)) return 0;
 
 	//Vypne CMD
+	HAL_Delay(100);
 	if(!bluetoothLeaveCMD()) return 0;
 
 	return 1;

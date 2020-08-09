@@ -175,19 +175,19 @@ void midiControl_record(uint8_t initiator, char * songname){
 
 void midiControl_play(uint8_t initiator, char * songname){
 	//Spusteno z PC
-	if(initiator == 0x00){
+	if(initiator == ADDRESS_PC){
 		midiControl_current_On();
 		memset(selectedSong, 0, 40);
 		sprintf(selectedSong, "%s", songname);
 		//Jen se zobrazi obrazovka prehravani
 		oled_setDisplayedSplash(oled_playingSplash, songname);
 		oled_refreshPause();
-	}else if(initiator == 0x01){
+	}else if(initiator == ADDRESS_CONTROLLER){
 	//Spusteno ovladacem
 		//Jen se zobrazi obrazovka prehravani
 		//oled_setDisplayedSplash(oled_playingSplash, songname);
 		//oled_refreshPause();
-	}else if(initiator == 0x02){
+	}else if(initiator == ADDRESS_MAIN){
 	//Spusteno ze zakladnove stanice
 		//Posle se zprava do PC aby zacalo prehravat
 		char msg[100];

@@ -1,6 +1,7 @@
 #ifndef midicontrol_h
 #define midicontrol_h
 
+#include "information.h"
 #include <stdint.h>
 #include <oled.h>
 

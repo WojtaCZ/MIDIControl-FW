@@ -56,7 +56,8 @@ Src/oled.o: ../Src/oled.c D:/STM/MIDIControl/Inc/oled.h \
  D:/STM/MIDIControl/Inc/ssd1306_fonts.h D:/STM/MIDIControl/Inc/menus.h \
  D:/STM/MIDIControl/Inc/bluetooth.h D:/STM/MIDIControl/Inc/oled.h \
  D:/STM/MIDIControl/Inc/rtc.h D:/STM/MIDIControl/Inc/bluetooth.h \
- D:/STM/MIDIControl/Inc/midiControl.h D:/STM/MIDIControl/Inc/devStatus.h \
+ D:/STM/MIDIControl/Inc/midiControl.h \
+ D:/STM/MIDIControl/Inc/information.h D:/STM/MIDIControl/Inc/devStatus.h \
  D:/STM/MIDIControl/Inc/msgDecoder.h
 
 D:/STM/MIDIControl/Inc/oled.h:
@@ -186,6 +187,8 @@ D:/STM/MIDIControl/Inc/rtc.h:
 D:/STM/MIDIControl/Inc/bluetooth.h:
 
 D:/STM/MIDIControl/Inc/midiControl.h:
+
+D:/STM/MIDIControl/Inc/information.h:
 
 D:/STM/MIDIControl/Inc/devStatus.h:
 

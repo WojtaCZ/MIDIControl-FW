@@ -1,5 +1,6 @@
 Src/midiControl.o: ../Src/midiControl.c \
- D:/STM/MIDIControl/Inc/midiControl.h D:/STM/MIDIControl/Inc/oled.h \
+ D:/STM/MIDIControl/Inc/midiControl.h \
+ D:/STM/MIDIControl/Inc/information.h D:/STM/MIDIControl/Inc/oled.h \
  D:/STM/MIDIControl/Inc/tim.h D:/STM/MIDIControl/Inc/main.h \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
  D:/STM/MIDIControl/Inc/stm32g4xx_hal_conf.h \
@@ -60,6 +61,8 @@ Src/midiControl.o: ../Src/midiControl.c \
  D:/STM/MIDIControl/Inc/usart.h D:/STM/MIDIControl/Inc/msgDecoder.h
 
 D:/STM/MIDIControl/Inc/midiControl.h:
+
+D:/STM/MIDIControl/Inc/information.h:
 
 D:/STM/MIDIControl/Inc/oled.h:
 

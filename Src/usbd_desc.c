@@ -25,7 +25,7 @@
 #include "usbd_conf.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "information.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,9 +65,9 @@
 
 #define USBD_VID     1155
 #define USBD_LANGID_STRING     1033
-#define USBD_MANUFACTURER_STRING     "Vojtìch Vosáhlo"
+#define USBD_MANUFACTURER_STRING     AUTHOR
 #define USBD_PID     22336
-#define USBD_PRODUCT_STRING     "MIDIControl"
+#define USBD_PRODUCT_STRING     NAME
 #define USBD_CONFIGURATION_STRING     "CDC Config"
 #define USBD_INTERFACE_STRING     "CDC Interface"
 

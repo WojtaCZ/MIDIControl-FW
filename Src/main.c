@@ -125,6 +125,7 @@ int main(void)
   MX_RTC_Init();
   MX_TIM4_Init();
   MX_TIM7_Init();
+
   /* USER CODE BEGIN 2 */
 
   //Inicializuje se system MIDIControl
@@ -208,10 +209,12 @@ int main(void)
 		  uint8_t dest = uartMsgDecodeBuff[6] & 0x03;
 		  uint8_t broadcast = (uartMsgDecodeBuff[6] & 0x04) >> 2;
 		  uint16_t msgLen = ((uartMsgDecodeBuff[4]&0xff)<<8 | (uartMsgDecodeBuff[5]&0xff));
+
 		  if(dest == ADDRESS_MAIN || broadcast){
 			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 		  }else{
-			  CDC_Transmit_FS(uartMsgDecodeBuff, msgLen);
+			 // sprintf(oledHeader, "D:%d B:%d", dest, broadcast);
+			  CDC_Transmit_FS(uartMsgDecodeBuff, msgLen+6);
 		  }
 
 		  btMsgReceivedFlag = 0;
@@ -343,7 +346,10 @@ int main(void)
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oled_refresh();
 	  	  while(!alivePC){
-	  		  HAL_Delay(100);
+	  		if(btMsgReceivedFlag){
+				decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+				btMsgReceivedFlag = 0;
+	  		}
 	  	  }
 	  	  oledType = OLED_MENU;
 	  }
@@ -574,7 +580,6 @@ void USB_received_handle(char * buff, uint32_t len){
 
 		//Pokud je pro toto zarizeni
 		if((buff[6] & 0x03) == ADDRESS_MAIN && ((buff[6] & 0x04) >> 2) == 0){
-			if(buff[8] == INTERNAL_COM_PLAY) sprintf(oledHeader, "%d %d %d", buff[4], buff[5], msgLen);
 			decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
 		}else if((buff[6] & 0x04) >> 2){
 			//Pokud je broadcast

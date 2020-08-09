@@ -12,8 +12,8 @@
 #define STRIP_NUMBER											(2)
 
 #define WS2812_FREQ												(800000) 			// it is fixed: WS2812 require 800kHz
-#define TIMER_CLOCK_FREQ									(72000000)   	// can be modified - multiples of 0.8MHz are suggested
-#define TIMER_PERIOD											(TIMER_CLOCK_FREQ / WS2812_FREQ)
+#define TIMER_CLOCK_FREQ									(72000000)   	// can be modified - multiples of 0.8MHz are suggested 72000000
+#define TIMER_PERIOD											90//(TIMER_CLOCK_FREQ / WS2812_FREQ)
 #define LED_DATA_SIZE											(LED_NUMBER * 24)
 #define RESET_SLOTS_BEGIN									(200)
 #define RESET_SLOTS_END										(200)
