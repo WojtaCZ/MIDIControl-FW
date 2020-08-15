@@ -125,7 +125,6 @@ int main(void)
   MX_RTC_Init();
   MX_TIM4_Init();
   MX_TIM7_Init();
-
   /* USER CODE BEGIN 2 */
 
   //Inicializuje se system MIDIControl
@@ -434,16 +433,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 
 
-	if((GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1) && HAL_TIM_Base_GetState(&htim1) != HAL_TIM_STATE_BUSY){
+	if(GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1){
 			GPIO_Pin_Flag = GPIO_Pin;
-			HAL_TIM_Base_Start_IT(&htim1);
-			HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
-			HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
-			HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM17_IRQn);
-			HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
+			if(HAL_TIM_Base_GetState(&htim1) != HAL_TIM_STATE_BUSY){
+					HAL_TIM_Base_Start_IT(&htim1);
+					HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
+					HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+					HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM17_IRQn);
+					HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
 
-			HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-			HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+					HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+					HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+			}
 
 	}
 
@@ -489,7 +490,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			encoderpos = 0;
 		}
 
-		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) && GPIO_Pin_Flag == GPIO_PIN_1){
+		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET/* && GPIO_Pin_Flag == GPIO_PIN_1*/){
 			encoderclick = 1;
 			if(refreshHalt) oled_refresh();
 		}
