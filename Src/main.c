@@ -94,6 +94,9 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
+  BootloaderCheck();
+
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -108,10 +111,13 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+
+  /*Configure GPIO pin : PtPin */
+
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_UCPD1_Init();
   MX_USB_Device_Init();
+  MX_UCPD1_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
@@ -127,6 +133,9 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
+
+
+
   //Inicializuje se system MIDIControl
   midiControl_init();
 
@@ -137,9 +146,9 @@ int main(void)
 
   ws2812_init();
 
-  setStatusAll(0, DEV_LOAD);
-
   oled_begin();
+
+  setStatusAll(0, DEV_LOAD);
 
   if(bluetoothInit()){
 	  setStatus(DEV_BLUETOOTH, DEV_OK);
@@ -158,9 +167,12 @@ int main(void)
   midiControl_midiIO_getState();
 
 
-  if(!alivePC){
-	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
+
+ if(!alivePC){
+	 oled_setDisplayedSplash(oled_StartSplash, "");
+	  oledType = OLED_SPLASH;
 	  while(!alivePC){
+		  if(oledType != OLED_SPLASH) oledType = OLED_SPLASH;
 		  if(btMsgReceivedFlag){
 			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 			  btMsgReceivedFlag = 0;
@@ -168,6 +180,17 @@ int main(void)
 	  }
   }
 
+/* if(!alivePC){
+	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
+	  oledType = OLED_SPLASH;
+	  while(!alivePC){
+		  if(oledType != OLED_SPLASH) oledType = OLED_SPLASH;
+		  if(btMsgReceivedFlag){
+			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
+			  btMsgReceivedFlag = 0;
+		  }
+	  }
+  }*/
 
   //Ziska se aktualni cas
   midiControl_get_time();
@@ -340,18 +363,20 @@ int main(void)
 	  }
 
 
-	  if(!alivePC){
+	 /* if(!alivePC){
 		  setStatusAll(1, DEV_CLR);
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
+	  	  oledType = OLED_SPLASH;
 	  	  oled_refresh();
 	  	  while(!alivePC){
+	  		if(oledType != OLED_SPLASH) oledType = OLED_SPLASH;
 	  		if(btMsgReceivedFlag){
 				decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
 				btMsgReceivedFlag = 0;
 	  		}
 	  	  }
 	  	  oledType = OLED_MENU;
-	  }
+	  }*/
 
     /* USER CODE END WHILE */
 
@@ -702,6 +727,53 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 		}
 	}
 }
+
+
+void BootloaderCheck(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+
+	GPIO_InitStruct.Pin = ENCODER_SW_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(ENCODER_SW_GPIO_Port, &GPIO_InitStruct);
+
+	if(HAL_GPIO_ReadPin(ENCODER_SW_GPIO_Port, ENCODER_SW_Pin) == GPIO_PIN_RESET){
+		__HAL_RCC_GPIOB_CLK_DISABLE();
+		HAL_GPIO_DeInit(ENCODER_SW_GPIO_Port, ENCODER_SW_Pin);
+		BootloaderInit(1);
+	}
+
+	__HAL_RCC_GPIOB_CLK_DISABLE();
+	HAL_GPIO_DeInit(ENCODER_SW_GPIO_Port, ENCODER_SW_Pin);
+}
+
+void BootloaderInit(uint8_t status){
+
+	volatile uint32_t addr = 0x1FFF0000;
+
+	if(status == 1){
+
+		HAL_RCC_DeInit();
+		HAL_DeInit();
+
+		SysTick->CTRL = 0;
+		SysTick->LOAD = 0;
+		SysTick->VAL  = 0;
+
+		__HAL_RCC_SYSCFG_CLK_ENABLE();
+		__HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
+
+		SCB->VTOR = *(__IO uint32_t*) addr;
+		SysMemBootJump = (void (*)(void)) (*((uint32_t *)(addr + 4)));
+		__set_MSP(*(__IO uint32_t*) addr);
+
+		SysMemBootJump();
+
+	}
+}
+
 
 
 /* USER CODE END 4 */
