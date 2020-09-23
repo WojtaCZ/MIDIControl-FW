@@ -29,69 +29,19 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc.h"
+#include  "../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc/usbd_midi.h"
 
-/* USER CODE BEGIN INCLUDE */
-
-/* USER CODE END INCLUDE */
-
-/** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
-  * @brief For Usb device.
-  * @{
-  */
-  
-/** @defgroup USBD_CDC_IF USBD_CDC_IF
-  * @brief Usb VCP device module
-  * @{
-  */ 
-
-/** @defgroup USBD_CDC_IF_Exported_Defines USBD_CDC_IF_Exported_Defines
-  * @brief Defines.
-  * @{
-  */
-/* USER CODE BEGIN EXPORTED_DEFINES */
-
-/* USER CODE END EXPORTED_DEFINES */
-
-/**
-  * @}
-  */
-
-/** @defgroup USBD_CDC_IF_Exported_Types USBD_CDC_IF_Exported_Types
-  * @brief Types.
-  * @{
-  */
-
-/* USER CODE BEGIN EXPORTED_TYPES */
-
-/* USER CODE END EXPORTED_TYPES */
-
-/**
-  * @}
-  */
-
-/** @defgroup USBD_CDC_IF_Exported_Macros USBD_CDC_IF_Exported_Macros
-  * @brief Aliases.
-  * @{
-  */
-
-/* USER CODE BEGIN EXPORTED_MACRO */
-
-/* USER CODE END EXPORTED_MACRO */
-
-/**
-  * @}
-  */
-
-/** @defgroup USBD_CDC_IF_Exported_Variables USBD_CDC_IF_Exported_Variables
-  * @brief Public variables.
-  * @{
-  */
+ int8_t CDC_Init_FS(void);
+ int8_t CDC_DeInit_FS(void);
+ int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
+ int8_t CDC_Receive_FS(uint8_t* pbuf, uint32_t *Len);
 
 /** CDC Interface callback. */
-extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
-
+extern USBD_CDC_ItfTypeDef USBD_CDC_Interface_fops_FS;
+extern USBD_HandleTypeDef hUsbDeviceFS;
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+extern void USB_CDC_received_handle(char * buff, uint32_t len);
+extern void USB_CDC_transmit_handle(char * buff, uint32_t len);
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -106,8 +56,7 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-extern void USB_received_handle(char * buff, uint32_t len);
-extern void USB_transmit_handle(char * buff, uint32_t len);
+
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**

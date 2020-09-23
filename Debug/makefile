@@ -11,6 +11,8 @@ RM := rm -rf
 -include startup/subdir.mk
 -include Src/subdir.mk
 -include Middlewares/ST/STM32_USB_Device_Library/Core/Src/subdir.mk
+-include Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/subdir.mk
+-include Middlewares/ST/STM32_USB_Device_Library/Class/COMPOSITE/Src/subdir.mk
 -include Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/subdir.mk
 -include Drivers/STM32G4xx_HAL_Driver/Src/subdir.mk
 -include subdir.mk

@@ -17,6 +17,8 @@ C_DEPS :=
 SUBDIRS := \
 Drivers/STM32G4xx_HAL_Driver/Src \
 Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src \
+Middlewares/ST/STM32_USB_Device_Library/Class/COMPOSITE/Src \
+Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src \
 Src \
 startup \

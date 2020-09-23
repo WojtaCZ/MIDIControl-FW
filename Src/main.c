@@ -43,6 +43,7 @@
 
 uint16_t GPIO_Pin_Flag;
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+extern uint8_t MIDI_Transmit_FS(uint8_t* Buf, uint16_t Len);
 uint8_t b;
 
 
@@ -168,7 +169,7 @@ int main(void)
 
 
 
- if(!alivePC){
+ /*if(!alivePC){
 	 oled_setDisplayedSplash(oled_StartSplash, "");
 	  oledType = OLED_SPLASH;
 	  while(!alivePC){
@@ -178,9 +179,9 @@ int main(void)
 			  btMsgReceivedFlag = 0;
 		  }
 	  }
-  }
+  }*/
 
-/* if(!alivePC){
+ if(!alivePC){
 	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  oledType = OLED_SPLASH;
 	  while(!alivePC){
@@ -190,7 +191,7 @@ int main(void)
 			  btMsgReceivedFlag = 0;
 		  }
 	  }
-  }*/
+  }
 
   //Ziska se aktualni cas
   midiControl_get_time();
@@ -363,7 +364,7 @@ int main(void)
 	  }
 
 
-	 /* if(!alivePC){
+	  if(!alivePC){
 		  setStatusAll(1, DEV_CLR);
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oledType = OLED_SPLASH;
@@ -376,7 +377,7 @@ int main(void)
 	  		}
 	  	  }
 	  	  oledType = OLED_MENU;
-	  }*/
+	  }
 
     /* USER CODE END WHILE */
 
@@ -588,13 +589,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}else if(btDataIcon != -1){
 			btDataIcon = -1;
 			btData = 0;
+			uint8_t note[] = {0x09, 0x90, 69, 0x0f};
+			MIDI_Transmit_FS(note, 4);
 		}
 	}
 
 
 }
 
-void USB_received_handle(char * buff, uint32_t len){
+void USB_CDC_received_handle(char * buff, uint32_t len){
 
 	setStatus(DEV_USB, DEV_DATA);
 
@@ -632,9 +635,19 @@ void USB_received_handle(char * buff, uint32_t len){
 	//HAL_UART_Transmit(&huart2, (uint8_t*)buff, len, HAL_MAX_DELAY);
 }
 
-void USB_transmit_handle(char * buff, uint32_t len){
+void USB_CDC_transmit_handle(char * buff, uint32_t len){
 	setStatus(DEV_USB, DEV_DATA);
 }
+
+void USB_MIDI_received_handle(char * buff, uint32_t len){
+	setStatus(FRONT3, DEV_DATA);
+}
+
+
+void USB_MIDI_transmit_handle(char * buff, uint32_t len){
+	setStatus(FRONT3, DEV_DATA);
+}
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 

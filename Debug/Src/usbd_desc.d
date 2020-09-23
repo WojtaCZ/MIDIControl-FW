@@ -47,8 +47,7 @@ Src/usbd_desc.o: ../Src/usbd_desc.c \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
  D:/STM/MIDIControl/Inc/usbd_desc.h \
- D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
- D:/STM/MIDIControl/Inc/information.h
+ D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h
 
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h:
 
@@ -147,5 +146,3 @@ D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.
 D:/STM/MIDIControl/Inc/usbd_desc.h:
 
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
-
-D:/STM/MIDIControl/Inc/information.h:

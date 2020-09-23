@@ -28,8 +28,10 @@ C_SRCS += \
 ../Src/usart.c \
 ../Src/usb_device.c \
 ../Src/usbd_cdc_if.c \
+../Src/usbd_composite_if.c \
 ../Src/usbd_conf.c \
 ../Src/usbd_desc.c \
+../Src/usbd_midi_if.c \
 ../Src/ws2812.c 
 
 OBJS += \
@@ -57,8 +59,10 @@ OBJS += \
 ./Src/usart.o \
 ./Src/usb_device.o \
 ./Src/usbd_cdc_if.o \
+./Src/usbd_composite_if.o \
 ./Src/usbd_conf.o \
 ./Src/usbd_desc.o \
+./Src/usbd_midi_if.o \
 ./Src/ws2812.o 
 
 C_DEPS += \
@@ -86,8 +90,10 @@ C_DEPS += \
 ./Src/usart.d \
 ./Src/usb_device.d \
 ./Src/usbd_cdc_if.d \
+./Src/usbd_composite_if.d \
 ./Src/usbd_conf.d \
 ./Src/usbd_desc.d \
+./Src/usbd_midi_if.d \
 ./Src/ws2812.d 
 
 

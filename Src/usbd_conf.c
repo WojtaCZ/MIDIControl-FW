@@ -26,6 +26,7 @@
 #include "usbd_core.h"
 
 #include "usbd_cdc.h"
+#include  "../Middlewares/ST/STM32_USB_Device_Library/Class/COMPOSITE/Inc/usbd_composite.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -82,9 +83,9 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     __HAL_RCC_USB_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USB_HP_IRQn, 15, 0);
+    HAL_NVIC_SetPriority(USB_HP_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USB_HP_IRQn);
-    HAL_NVIC_SetPriority(USB_LP_IRQn, 14, 0);
+    HAL_NVIC_SetPriority(USB_LP_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USB_LP_IRQn);
   /* USER CODE BEGIN USB_MspInit 1 */
 
@@ -434,13 +435,17 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   /* USER CODE END RegisterCallBackSecondPart */
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
   /* USER CODE BEGIN EndPoint_Configuration */
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x00 , PCD_SNG_BUF, 0x18);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x80 , PCD_SNG_BUF, 0x58);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x00 , PCD_SNG_BUF, 0x20); //18
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x80 , PCD_SNG_BUF, 0x60); //58
   /* USER CODE END EndPoint_Configuration */
   /* USER CODE BEGIN EndPoint_Configuration_CDC */
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x81 , PCD_SNG_BUF, 0xC0);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x01 , PCD_SNG_BUF, 0x110);
-  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , 0x82 , PCD_SNG_BUF, 0x100);
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC_IN_EP, PCD_SNG_BUF, 0xA0); //c0
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC_OUT_EP , PCD_SNG_BUF, 0xE0); //110
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , CDC_CMD_EP , PCD_SNG_BUF, 0x100); //100
+
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , MIDI_IN_EP , PCD_SNG_BUF, 0x140);  //150
+  HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData , MIDI_OUT_EP , PCD_SNG_BUF, 0x180);  //190
+
   /* USER CODE END EndPoint_Configuration_CDC */
   return USBD_OK;
 }

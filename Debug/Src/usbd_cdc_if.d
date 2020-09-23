@@ -1,6 +1,7 @@
 Src/usbd_cdc_if.o: ../Src/usbd_cdc_if.c \
  D:/STM/MIDIControl/Inc/usbd_cdc_if.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h \
+ d:\stm\midicontrol\middlewares\st\stm32_usb_device_library\class\composite\inc\usbd_composite.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
  D:/STM/MIDIControl/Inc/usbd_conf.h \
@@ -47,11 +48,14 @@ Src/usbd_cdc_if.o: ../Src/usbd_cdc_if.c \
  D:/STM/MIDIControl/Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
- D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
+ D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h \
+ d:\stm\midicontrol\middlewares\st\stm32_usb_device_library\class\midi\inc\usbd_midi.h
 
 D:/STM/MIDIControl/Inc/usbd_cdc_if.h:
 
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h:
+
+d:\stm\midicontrol\middlewares\st\stm32_usb_device_library\class\composite\inc\usbd_composite.h:
 
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
 
@@ -146,3 +150,5 @@ D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h:
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:
 
 D:/STM/MIDIControl/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h:
+
+d:\stm\midicontrol\middlewares\st\stm32_usb_device_library\class\midi\inc\usbd_midi.h:
