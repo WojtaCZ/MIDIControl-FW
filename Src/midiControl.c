@@ -74,6 +74,7 @@ void midiControl_init(){
 	workerDesert(&workerBtConnect);
 	workerDesert(&workerBtScanBondable);
 	workerDesert(&workerBtRemoveController);
+	midiGotMessage = 0;
 }
 
 //Rutina pro kontrolu stavu displeje a zobrazeni na LED

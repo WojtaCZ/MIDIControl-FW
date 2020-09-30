@@ -425,7 +425,7 @@ void oled_drawMenu(){
 
 	//Vypise se hlavicka
 	//sprintf(oledHeader, "%d %d %d %d", alivePC, aliveRemote, btCmdMode, btStreamOpen);
-	sprintf(oledHeader, "%2d.%2d. %2d:%02d",date.Date, date.Month, time.Hours, time.Minutes);
+	//sprintf(oledHeader, "%2d.%2d. %2d:%02d",date.Date, date.Month, time.Hours, time.Minutes);
 	//sprintf(oledHeader, "%d %d %d", encoderpos, encoderclick, HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
 	//sprintf(oledHeader, "Disp: %d", HAL_GPIO_ReadPin(DISP_SENSE_GPIO_Port, DISP_SENSE_Pin));
 	//oledHeader = NAME " " VERSION;

@@ -37,7 +37,7 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN Private defines */
-
+uint8_t midiGotMessage;
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);

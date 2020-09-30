@@ -15,7 +15,7 @@ USBD_COMPOSITE_ItfTypeDef USBD_COMPOSITE_Interface_fops_FS =
 int8_t COMPOSITE_Init_FS(void)
 {
 	CDC_Init_FS();
-	MIDI_Init_FS();
+	//MIDI_Init_FS();
 
   return (USBD_OK);
 

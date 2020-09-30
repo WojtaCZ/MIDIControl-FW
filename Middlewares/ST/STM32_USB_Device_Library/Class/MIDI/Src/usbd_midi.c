@@ -58,7 +58,7 @@ EndBSPDependencies */
 /* Includes ------------------------------------------------------------------*/
 #include  "../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc/usbd_midi.h"
 #include "usbd_ctlreq.h"
-
+#include "usbd_midi_if.h"
 /**
   * @brief  USBD_MIDI_Init
   *         Initialize the CDC interface
@@ -69,68 +69,18 @@ EndBSPDependencies */
 
 uint8_t  USBD_MIDI_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
-  uint8_t ret = 0U;
-  USBD_MIDI_HandleTypeDef   *hmidi;
-
-  if (pdev->dev_speed == USBD_SPEED_HIGH)
-  {
-    /* Open EP IN */
-    USBD_LL_OpenEP(pdev, MIDI_IN_EP, USBD_EP_TYPE_BULK,
-                   CDC_DATA_HS_IN_PACKET_SIZE);
+    USBD_LL_OpenEP(pdev, MIDI_IN_EP, USBD_EP_TYPE_BULK, MIDI_IN_PACKET_SIZE);
 
     pdev->ep_in[MIDI_IN_EP & 0xFU].is_used = 1U;
 
-    /* Open EP OUT */
-    USBD_LL_OpenEP(pdev, MIDI_OUT_EP, USBD_EP_TYPE_BULK,
-                   MIDI_OUT_PACKET_SIZE);
+    USBD_LL_OpenEP(pdev, MIDI_OUT_EP, USBD_EP_TYPE_BULK, MIDI_OUT_PACKET_SIZE);
 
     pdev->ep_out[MIDI_OUT_EP & 0xFU].is_used = 1U;
 
-  }
-  else
-  {
-    /* Open EP IN */
-    USBD_LL_OpenEP(pdev, MIDI_IN_EP, USBD_EP_TYPE_BULK,
-                   CDC_DATA_FS_IN_PACKET_SIZE);
+    /* Prepare Out endpoint to receive next packet */
+    USBD_LL_PrepareReceive(pdev, MIDI_OUT_EP, (uint8_t *)MIDIRxBufferFS, MIDI_OUT_PACKET_SIZE);
 
-    pdev->ep_in[MIDI_IN_EP & 0xFU].is_used = 1U;
-
-    /* Open EP OUT */
-    USBD_LL_OpenEP(pdev, MIDI_OUT_EP, USBD_EP_TYPE_BULK,
-    		MIDI_OUT_PACKET_SIZE);
-
-    pdev->ep_out[MIDI_OUT_EP & 0xFU].is_used = 1U;
-  }
-
-  if (pdev->pClassData == NULL)
-  {
-    ret = 1U;
-  }
-  else
-  {
-    hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
-
-    /* Init  physical Interface components */
-    ((USBD_MIDI_ItfTypeDef *)pdev->pUserData)->Init();
-
-    /* Init Xfer states */
-    hmidi->TxState = 0U;
-    hmidi->RxState = 0U;
-
-    if (pdev->dev_speed == USBD_SPEED_HIGH)
-    {
-      /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev, MIDI_OUT_EP, hmidi->RxBuffer,
-    		  MIDI_OUT_PACKET_SIZE);
-    }
-    else
-    {
-      /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev, MIDI_OUT_EP, hmidi->RxBuffer,
-    		  MIDI_OUT_PACKET_SIZE);
-    }
-  }
-  return ret;
+  return USBD_OK;
 }
 
 /**
@@ -190,7 +140,7 @@ uint8_t  USBD_MIDI_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
     }
     return USBD_OK;
   }
-  else
+ else
   {
     return USBD_FAIL;
   }
@@ -207,31 +157,37 @@ uint8_t  USBD_MIDI_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
 
 
- USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
+/* USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
 
 
-  hmidi->RxLength = 4;//USBD_LL_GetRxDataSize(pdev, epnum);
+  hmidi->RxLength = USBD_LL_GetRxDataSize(pdev, epnum);
 
 
   if (pdev->pClassData != NULL)
-  {
+  {*/
+
+	uint32_t rec = USBD_LL_GetRxDataSize(pdev, epnum);
+
 
 	  //((USBD_MIDI_ItfTypeDef *)pdev->pUserData)->Receive(hmidi->RxBuffer, &hmidi->RxLength);
-	  MIDI_Receive_FS(hmidi->RxBuffer, &hmidi->RxLength);
+	  MIDI_Receive_FS(MIDIRxBufferFS, &rec);
 
-    return USBD_OK;
+	  USBD_LL_PrepareReceive(pdev, MIDI_OUT_EP, (uint8_t *)MIDIRxBufferFS, MIDI_OUT_PACKET_SIZE);
+
+
+    return USBD_OK;/*
   }
   else
   {
     return USBD_FAIL;
-  }
+  }*/
 
 
 
 
 }
 
-uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev)
+uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev, uint8_t* Buf, uint16_t Len)
 {
   USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
 
@@ -240,16 +196,15 @@ uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev)
     if (hmidi->TxState == 0U)
     {
       /* Tx Transfer in progress */
-    	hmidi->TxState = 1U;
+      hmidi->TxState = 1U;
 
       /* Update the packet total length */
-      pdev->ep_in[MIDI_IN_EP & 0xFU].total_length = hmidi->TxLength;
+      pdev->ep_in[MIDI_IN_EP & 0xFU].total_length = Len;
 
       /* Transmit next packet */
-      USBD_LL_Transmit(pdev, MIDI_IN_EP, hmidi->TxBuffer,
-                       (uint16_t)hmidi->TxLength);
+      USBD_LL_Transmit(pdev, MIDI_IN_EP, (uint8_t *)Buf, (uint16_t)Len);
 
-      return USBD_OK;
+     return USBD_OK;
     }
     else
     {
@@ -266,33 +221,34 @@ uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev)
 
 uint8_t  USBD_MIDI_ReceivePacket(USBD_HandleTypeDef *pdev)
 {
-  USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
+ // USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
+  //hmidi->RxBuffer = MIDIRxBufferFS;
 
   /* Suspend or Resume USB Out process */
-  if (pdev->pClassData != NULL)
+  /*if (pdev->pClassData != NULL)
   {
     if (pdev->dev_speed == USBD_SPEED_HIGH)
-    {
+    {*/
       /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev,
+     /* USBD_LL_PrepareReceive(pdev,
                              MIDI_OUT_EP,
                              hmidi->RxBuffer,
 							 MIDI_OUT_PACKET_SIZE);
     }
     else
-    {
+    {*/
       /* Prepare Out endpoint to receive next packet */
       USBD_LL_PrepareReceive(pdev,
                              MIDI_OUT_EP,
-                             hmidi->RxBuffer,
+							 MIDIRxBufferFS,
 							 MIDI_OUT_PACKET_SIZE);
-    }
+   /* }
     return USBD_OK;
   }
   else
   {
     return USBD_FAIL;
-  }
+  }*/
 }
 
 
@@ -319,7 +275,7 @@ uint8_t  USBD_MIDI_SetTxBuffer(USBD_HandleTypeDef   *pdev, uint8_t  *pbuff, uint
   * @param  pbuff: Rx Buffer
   * @retval status
   */
-uint8_t  USBD_MIDI_SetRxBuffer(USBD_HandleTypeDef   *pdev, uint8_t  *pbuff)
+uint8_t  USBD_MIDI_SetRxBuffer(USBD_HandleTypeDef *pdev, uint8_t  *pbuff)
 {
   USBD_MIDI_HandleTypeDef   *hmidi = (USBD_MIDI_HandleTypeDef *) pdev->pClassData;
 

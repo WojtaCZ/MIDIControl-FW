@@ -17,6 +17,12 @@ int8_t MIDI_Init_FS(void);
 int8_t MIDI_DeInit_FS(void);
 int8_t MIDI_Receive_FS(uint8_t* pbuf, uint32_t *Len);
 
+#define MIDI_APP_RX_DATA_SIZE  1000
+#define MIDI_APP_TX_DATA_SIZE  1000
+
+uint8_t MIDIRxBufferFS[MIDI_APP_RX_DATA_SIZE];
+uint8_t MIDITxBufferFS[MIDI_APP_TX_DATA_SIZE];
+
 
 extern void USB_MIDI_received_handle(char * buff, uint32_t len);
 extern void USB_MIDI_transmit_handle(char * buff, uint32_t len);

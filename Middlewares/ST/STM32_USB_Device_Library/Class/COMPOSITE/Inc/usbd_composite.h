@@ -69,8 +69,8 @@ extern "C" {
 #define CDC_DATA_FS_IN_PACKET_SIZE                  CDC_DATA_FS_MAX_PACKET_SIZE
 #define CDC_DATA_FS_OUT_PACKET_SIZE                 CDC_DATA_FS_MAX_PACKET_SIZE
 
-#define MIDI_OUT_PACKET_SIZE						4U
-
+#define MIDI_OUT_PACKET_SIZE						0x04
+#define MIDI_IN_PACKET_SIZE							0x04
 
 extern USBD_ClassTypeDef  USBD_COMPOSITE;
 #define USBD_COMPOSITE_CLASS    &USBD_COMPOSITE

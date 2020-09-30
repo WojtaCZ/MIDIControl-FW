@@ -331,8 +331,8 @@ __ALIGN_BEGIN uint8_t USBD_COMPOSITE_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_
   USB_DESC_TYPE_ENDPOINT,            /* bDescriptorType: Endpoint */
   MIDI_IN_EP,                         /* bEndpointAddress */
   0x02,                              /* bmAttributes: Bulk */
-  LOBYTE(USB_MAX_PACKET_SIZE),		 /* wMaxPacketSize: */
-  HIBYTE(USB_MAX_PACKET_SIZE),
+  LOBYTE(MIDI_IN_PACKET_SIZE),		 /* wMaxPacketSize: */
+  HIBYTE(MIDI_IN_PACKET_SIZE),
   0x00,                              /* bInterval: ignore for Bulk transfer */
   0x00,                              /* bRefresh:  */
   0x00,                              /* bSyncAddress:*/
@@ -433,7 +433,7 @@ __ALIGN_BEGIN uint8_t USBD_COMPOSITE_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_
   0x03,                          /* bmAttributes: Interrupt */
   LOBYTE(CDC_CMD_PACKET_SIZE),   /* wMaxPacketSize: */
   HIBYTE(CDC_CMD_PACKET_SIZE),
-  0x10,                          /* bInterval: */
+  CDC_FS_BINTERVAL,                          /* bInterval: */
   /* 07 bytes */
 
   /*Data class interface descriptor*/

@@ -53,7 +53,7 @@ uint8_t  USBD_MIDI_SetRxBuffer(USBD_HandleTypeDef   *pdev,
 
 uint8_t  USBD_MIDI_ReceivePacket(USBD_HandleTypeDef *pdev);
 
-uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev);
+uint8_t  USBD_MIDI_TransmitPacket(USBD_HandleTypeDef *pdev, uint8_t* Buf, uint16_t Len);
 
 
 typedef struct

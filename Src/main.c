@@ -168,20 +168,7 @@ int main(void)
   midiControl_midiIO_getState();
 
 
-
  /*if(!alivePC){
-	 oled_setDisplayedSplash(oled_StartSplash, "");
-	  oledType = OLED_SPLASH;
-	  while(!alivePC){
-		  if(oledType != OLED_SPLASH) oledType = OLED_SPLASH;
-		  if(btMsgReceivedFlag){
-			  decodeMessage(uartMsgDecodeBuff, ((uartMsgDecodeBuff[6] & 0x04) >> 2));
-			  btMsgReceivedFlag = 0;
-		  }
-	  }
-  }*/
-
- if(!alivePC){
 	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  oledType = OLED_SPLASH;
 	  while(!alivePC){
@@ -191,7 +178,7 @@ int main(void)
 			  btMsgReceivedFlag = 0;
 		  }
 	  }
-  }
+  }*/
 
   //Ziska se aktualni cas
   midiControl_get_time();
@@ -364,7 +351,7 @@ int main(void)
 	  }
 
 
-	  if(!alivePC){
+	 /* if(!alivePC){
 		  setStatusAll(1, DEV_CLR);
 	  	  oled_setDisplayedSplash(oled_UsbWaitingSplash, "");
 	  	  oledType = OLED_SPLASH;
@@ -377,7 +364,7 @@ int main(void)
 	  		}
 	  	  }
 	  	  oledType = OLED_MENU;
-	  }
+	  }*/
 
     /* USER CODE END WHILE */
 
@@ -560,6 +547,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 		loadingToggle = ~loadingToggle;
 
+		/*if(loadingToggle){
+			uint8_t note[] = {0x08, 0x90, 0x47, 0x47};
+			MIDI_Transmit_FS(note, 4);
+		}else{
+			uint8_t note[] = {0x08, 0x80, 0x47, 0x47};
+			MIDI_Transmit_FS(note, 4);
+		}*/
+
 		if(btStatusMsg){
 			btStatusMsgWD++;
 
@@ -589,8 +584,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}else if(btDataIcon != -1){
 			btDataIcon = -1;
 			btData = 0;
-			uint8_t note[] = {0x09, 0x90, 69, 0x0f};
-			MIDI_Transmit_FS(note, 4);
 		}
 	}
 
@@ -601,38 +594,29 @@ void USB_CDC_received_handle(char * buff, uint32_t len){
 
 	setStatus(DEV_USB, DEV_DATA);
 
-	if(len > 5 && buff[0] == 0 && buff[1] == 0 && buff[2] == 0 && buff[3] == 0){
+	uint16_t msgLen = ((buff[4]&0xff)<<8 | (buff[5]&0xff));
 
-		uint16_t msgLen = ((buff[4]&0xff)<<8 | (buff[5]&0xff));
+	memcpy(&decoderBuffer, buff, msgLen+6);
 
-		memcpy(&decoderBuffer, buff, msgLen+6);
-
-		//Pokud je pro toto zarizeni
-		if((buff[6] & 0x03) == ADDRESS_MAIN && ((buff[6] & 0x04) >> 2) == 0){
-			decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
-		}else if((buff[6] & 0x04) >> 2){
-			//Pokud je broadcast
-			//Dekoduje a preposle na BT
-			if(!btCmdMode && btStreamOpen){
-				HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
-			}
-
-			decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
-
-
-		}else{
-			//Jen preposle na BT
-			if(!btCmdMode && btStreamOpen){
-				HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
-			}
+	//Pokud je pro toto zarizeni
+	if((buff[6] & 0x03) == ADDRESS_MAIN && ((buff[6] & 0x04) >> 2) == 0){
+		decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
+	}else if((buff[6] & 0x04) >> 2){
+		//Pokud je broadcast
+		//Dekoduje a preposle na BT
+		if(!btCmdMode && btStreamOpen){
+			HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
 		}
 
+		decodeMessage(decoderBuffer, (buff[6] & 0x04) >> 3);
 
 	}else{
-		HAL_UART_Transmit_IT(&huart3, (uint8_t*)buff, len);
+		//Jen preposle na BT
+		if(!btCmdMode && btStreamOpen){
+			HAL_UART_Transmit_IT(&huart2, decoderBuffer, msgLen+6);
+		}
 	}
 
-	//HAL_UART_Transmit(&huart2, (uint8_t*)buff, len, HAL_MAX_DELAY);
 }
 
 void USB_CDC_transmit_handle(char * buff, uint32_t len){
@@ -641,6 +625,7 @@ void USB_CDC_transmit_handle(char * buff, uint32_t len){
 
 void USB_MIDI_received_handle(char * buff, uint32_t len){
 	setStatus(FRONT3, DEV_DATA);
+	HAL_UART_Transmit_IT(&huart3, (uint8_t*)buff+1, len-1);
 }
 
 
@@ -652,19 +637,68 @@ void USB_MIDI_transmit_handle(char * buff, uint32_t len){
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 	if(huart->Instance == USART3){
-		/*if(midiStatus == MIDI_A){
+		if(midiStatus == MIDI_A){
 			setStatus(DEV_MIDIA, DEV_DATA);
 		}else if(midiStatus == MIDI_B){
 			setStatus(DEV_MIDIB, DEV_DATA);
-		}*/
-
-
-		if(midiFifoIndex > 0){
-			CDC_Transmit_FS(midiFifo, midiFifoIndex);
-			midiFifoIndex = 0;
 		}
 
-		HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+		//Precte se typ zpravy
+		uint8_t msgType = midiFifo[0];
+
+		//Pokud prijde byte validni MIDI zpravy
+		if((msgType & 0xF0) >= 0x80 && !midiGotMessage){
+			midiGotMessage = 1;
+
+			//Zpravy co maji 2 byty
+			if((msgType >= 0x80 && msgType <= 0xBF) || (msgType & 0xF0) == 0xE0 || msgType == 0xF2 || msgType == 0xF0){
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex], 2);
+				midiFifoIndex += 2;
+			}else if((msgType & 0xF0) == 0xC0 ||  (msgType & 0xF0) == 0xD0 || msgType == 0xF3){
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+			}else{
+				midiFifoIndex = 0;
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+			}
+
+
+		}else if(midiGotMessage){
+			sprintf(oledHeader, "%x %x %x %x",msgType,midiFifo[midiFifoIndex-1], midiFifo[midiFifoIndex], midiFifo[midiFifoIndex+1]);
+			//Pokud byla zprava sysex a prisel sysex end
+			if(msgType == 0xF0 && midiFifo[midiFifoIndex-1] == 0xF7){
+				midiFifoIndex = 0;
+				midiFifo[midiFifoIndex] = 0;
+				midiGotMessage = 0;
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+			}else if(msgType == 0xF0 && midiFifo[midiFifoIndex-1] != 0xF7){
+				//Pokud byla zprava sysex a prisly data
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+			}else{
+				//Ostatni zpravy
+				uint8_t buffer[4];
+				//Vynuluje se buffer
+				memset(buffer,0,4);
+				//Vytvori se CN a CIN
+				buffer[0] = ((midiFifo[0] >> 4) & 0x0F);
+				//Data se presunou do bufferu
+				memcpy(&buffer[1], &midiFifo[0], midiFifoIndex);
+
+
+				MIDI_Transmit_FS(buffer, 4);
+				//Zacne se novy prijem
+				midiFifoIndex = 0;
+				midiGotMessage = 0;
+				midiFifo[midiFifoIndex] = 0;
+				HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+			}
+		}else{
+			//Pokud nema validni MIDI zpravu, prijima dal
+			midiGotMessage = 0;
+			midiFifoIndex = 0;
+			midiFifo[midiFifoIndex] = 0;
+			HAL_UART_Receive_IT(&huart3, &midiFifo[midiFifoIndex++], 1);
+		}
+
 
 	}else if(huart->Instance == USART1){
 		setStatus(DEV_DISP, DEV_DATA);
